@@ -1,22 +1,46 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, User, UserPlus, KeyRound, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  User,
+  UserPlus,
+  KeyRound,
+  AlertCircle,
+  CheckCircle,
+  ArrowRight,
+  RefreshCw,
+  Send
+} from 'lucide-react';
 
 export function RegisterPage() {
-  const [step, setStep] = useState(1); // 1: Info form, 2: Verification code
+  const { register, confirmCode, resendCode, isMockMode } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [step, setStep] = useState(location.state?.step || 1); // 1: Info form, 2: Verification code
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [verificationCode, setVerificationCode] = useState('123456');
+  const [verificationCode, setVerificationCode] = useState(isMockMode ? '123456' : '');
 
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState(
+    location.state?.email ? `Nhập mã xác nhận OTP đã gửi đến ${location.state.email}` : ''
+  );
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  const { register, confirmCode, isMockMode } = useAuth();
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+    if (location.state?.step) {
+      setStep(location.state.step);
+    }
+  }, [location.state]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -27,7 +51,7 @@ export function RegisterPage() {
       return;
     }
     if (password.length < 8) {
-      setError('Mật khẩu Cognito yêu cầu tối thiểu 8 ký tự');
+      setError('Mật khẩu Cognito yêu cầu tối thiểu 8 ký tự (chữ hoa, chữ thường, số)');
       return;
     }
 
@@ -38,7 +62,7 @@ export function RegisterPage() {
         navigate('/login');
       } else {
         setStep(2);
-        setSuccessMsg(res.message || 'Mã xác thực 6 số đã được gửi tới email của bạn');
+        setSuccessMsg(res.message || 'Mã xác thực 6 số đã được gửi tới email của bạn từ AWS Cognito');
       }
     } catch (err) {
       setError(err.message || 'Đăng ký thất bại');
@@ -54,7 +78,7 @@ export function RegisterPage() {
 
     try {
       await confirmCode(email, verificationCode);
-      alert('Tài khoản đã được xác thực thành công trên Cognito User Pool!');
+      alert('Tài khoản đã được xác thực thành công trên AWS Cognito User Pool!');
       navigate('/login');
     } catch (err) {
       setError(err.message || 'Xác thực thất bại');
@@ -63,12 +87,26 @@ export function RegisterPage() {
     }
   };
 
+  const handleResend = async () => {
+    if (!email) return;
+    setError('');
+    setResending(true);
+    try {
+      await resendCode(email);
+      setSuccessMsg(`Đã gửi lại mã xác nhận mới tới email: ${email}`);
+    } catch (err) {
+      setError(err.message || 'Không thể gửi lại mã xác nhận');
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="inline-flex p-3 rounded-2xl bg-indigo-50 text-indigo-600 mb-3 shadow-inner">
               <UserPlus className="w-6 h-6" />
             </div>
@@ -77,8 +115,8 @@ export function RegisterPage() {
             </h1>
             <p className="text-sm text-slate-500 mt-1">
               {step === 1
-                ? 'Đăng ký để tải lên và phân tích bài giảng đa phương tiện'
-                : `Nhập mã xác nhận đã gửi đến ${email}`}
+                ? 'Đăng ký vào AWS Cognito User Pool của dự án'
+                : `Nhập mã xác nhận 6 số đã gửi đến ${email}`}
             </p>
           </div>
 
@@ -91,7 +129,7 @@ export function RegisterPage() {
           )}
 
           {successMsg && step === 2 && (
-            <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm flex items-start space-x-2.5">
+            <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs sm:text-sm flex items-start space-x-2.5">
               <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -186,7 +224,7 @@ export function RegisterPage() {
             <form onSubmit={handleConfirmCode} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Mã xác nhận 6 số
+                  Mã xác nhận 6 số từ Email
                 </label>
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -200,10 +238,32 @@ export function RegisterPage() {
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm tracking-widest font-mono text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
-                {isMockMode && (
+                {isMockMode ? (
                   <p className="mt-1.5 text-xs text-indigo-600 font-medium text-center">
                     💡 Chế độ Mock: Mã mặc định là <b>123456</b>
                   </p>
+                ) : (
+                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                    <span>Không nhận được mã?</span>
+                    <button
+                      type="button"
+                      disabled={resending}
+                      onClick={handleResend}
+                      className="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline flex items-center gap-1"
+                    >
+                      {resending ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          <span>Đang gửi...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3 h-3" />
+                          <span>Gửi lại mã OTP</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -215,7 +275,7 @@ export function RegisterPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <span>Kích hoạt tài khoản</span>
+                  <span>Kích hoạt tài khoản Cognito</span>
                 )}
               </button>
 

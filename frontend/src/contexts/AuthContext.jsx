@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { sdkLogin, sdkRegister, sdkConfirmCode, sdkLogout } from '../api/auth';
-import { MOCK_USER } from '../api/mockData';
+import {
+  sdkLogin,
+  sdkRegister,
+  sdkConfirmCode,
+  sdkResendCode,
+  sdkLogout,
+  isCognitoConfigured,
+  getCognitoConfig
+} from '../api/auth';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +18,7 @@ export function AuthProvider({ children }) {
   const [idToken, setIdToken] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMockMode, setIsMockMode] = useState(true);
+  const [isMockMode, setIsMockMode] = useState(!isCognitoConfigured);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -19,10 +26,21 @@ export function AuthProvider({ children }) {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY);
       if (stored) {
         const session = JSON.parse(stored);
-        setUser(session.user);
-        setIdToken(session.idToken);
-        setAccessToken(session.accessToken);
-        setIsMockMode(session.isMock ?? true);
+        // If live Cognito is active now, clear any previous mock sessions
+        if (isCognitoConfigured && session.isMock) {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          setUser(null);
+          setIdToken(null);
+          setAccessToken(null);
+          setIsMockMode(false);
+        } else {
+          setUser(session.user);
+          setIdToken(session.idToken);
+          setAccessToken(session.accessToken);
+          setIsMockMode(session.isMock ?? !isCognitoConfigured);
+        }
+      } else {
+        setIsMockMode(!isCognitoConfigured);
       }
     } catch (e) {
       console.error('Failed to parse cached auth session:', e);
@@ -37,13 +55,13 @@ export function AuthProvider({ children }) {
     setUser(result.user);
     setIdToken(result.idToken);
     setAccessToken(result.accessToken);
-    setIsMockMode(result.isMock ?? true);
+    setIsMockMode(result.isMock ?? !isCognitoConfigured);
 
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
       user: result.user,
       idToken: result.idToken,
       accessToken: result.accessToken,
-      isMock: result.isMock ?? true
+      isMock: result.isMock ?? !isCognitoConfigured
     }));
 
     return result;
@@ -55,6 +73,10 @@ export function AuthProvider({ children }) {
 
   const confirmCode = async (email, code) => {
     return sdkConfirmCode(email, code);
+  };
+
+  const resendCode = async (email) => {
+    return sdkResendCode(email);
   };
 
   const logout = () => {
@@ -78,9 +100,11 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(idToken),
     isLoading,
     isMockMode,
+    cognitoConfig: getCognitoConfig(),
     login,
     register,
     confirmCode,
+    resendCode,
     logout,
     quickDemoLogin
   };

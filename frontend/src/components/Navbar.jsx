@@ -45,22 +45,27 @@ export function Navbar() {
                 <span>Tải lên video</span>
               </Link>
               <Link
-                to="/jobs"
+                to="/videos"
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive('/jobs')
+                  isActive('/videos')
                     ? 'bg-indigo-50 text-indigo-700'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <Video className="w-4 h-4" />
-                <span>Thư viện Job</span>
+                <span>Thư viện Video</span>
               </Link>
             </nav>
           )}
 
           {/* User Profile / Status */}
           <div className="flex items-center space-x-3">
-            {isMockMode && (
+            {!isMockMode ? (
+              <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                AWS Cognito Live
+              </span>
+            ) : (
               <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200">
                 <Shield className="w-3 h-3 text-amber-600" />
                 Mock AWS Mode

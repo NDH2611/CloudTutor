@@ -13,7 +13,12 @@ import {
   Cloud,
   Layers,
   Sparkles,
-  Info
+  Info,
+  BookOpen,
+  MessageSquareQuote,
+  Lightbulb,
+  PlayCircle,
+  Clock
 } from 'lucide-react';
 
 export function UploadPage() {
@@ -24,6 +29,9 @@ export function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
   
+  // Tab guide state: 'upload' | 'qa'
+  const [guideTab, setGuideTab] = useState('upload');
+
   // Upload lifecycle state: 'IDLE' | 'CREATING_JOB' | 'UPLOADING_S3' | 'SUCCESS' | 'ERROR'
   const [uploadState, setUploadState] = useState('IDLE');
   const [progress, setProgress] = useState(0);
@@ -357,72 +365,195 @@ export function UploadPage() {
           )}
         </div>
 
-        {/* Right Column: Architectural Flow & Week 1 Checklist */}
-        <div className="space-y-6">
-          {/* Architecture Explainer Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 mb-4">
-              <Layers className="w-4 h-4 text-indigo-600" />
-              Luồng kiến trúc Tuần 1 (End-to-End)
-            </h3>
-            
-            <div className="space-y-4 text-xs">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">
-                  1
+        {/* Right Column: User Guide (Upload & Q&A) */}
+        <div className="space-y-5">
+          {/* Guide Card Container */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Header & Tab Switcher */}
+            <div className="p-5 pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2.5 mb-3">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="font-semibold text-slate-800">Xác thực Cognito</span>
-                  <p className="text-slate-500 mt-0.5">Lấy JWT token đính kèm trong header `Authorization: Bearer &lt;idToken&gt;`.</p>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    Hướng dẫn sử dụng
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Thao tác từng bước trên CloudTutor
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">
-                  2
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-800">Khởi tạo Job Manifest</span>
-                  <p className="text-slate-500 mt-0.5">Gọi `POST /jobs` tới API Gateway. DynamoDB ghi nhận status `CREATED`, trả về Presigned URL.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">
-                  3
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-800">Direct S3 Upload</span>
-                  <p className="text-slate-500 mt-0.5">Frontend PUT trực tiếp video lên Amazon S3 bucket, không đi qua server để tối ưu băng thông.</p>
-                </div>
+              {/* Segmented Tab Switcher */}
+              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => setGuideTab('upload')}
+                  className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-lg transition-all ${
+                    guideTab === 'upload'
+                      ? 'bg-white text-indigo-700 shadow-sm'
+                      : 'hover:text-slate-900'
+                  }`}
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>1. Upload Video</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGuideTab('qa')}
+                  className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-lg transition-all ${
+                    guideTab === 'qa'
+                      ? 'bg-white text-indigo-700 shadow-sm'
+                      : 'hover:text-slate-900'
+                  }`}
+                >
+                  <MessageSquareQuote className="w-3.5 h-3.5" />
+                  <span>2. Hỏi đáp Q&A</span>
+                </button>
               </div>
             </div>
+
+            {/* Tab 1: Hướng dẫn Upload Video */}
+            {guideTab === 'upload' && (
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                    Quy trình tải lên video
+                  </span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+                    3 Bước
+                  </span>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  {/* Step 1 */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-100 transition-colors">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+                        1
+                      </div>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        Chọn tệp bài giảng (.mp4)
+                      </span>
+                    </div>
+                    <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
+                      Kéo thả file video vào ô tải lên hoặc bấm duyệt từ máy tính (hỗ trợ tối đa 500MB).
+                    </p>
+                    <div className="mt-2 ml-7 inline-flex items-center gap-1 text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded font-medium border border-amber-200/60">
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      Mẹo: Bấm <b>"Dùng tệp bài giảng mẫu"</b> để test nhanh
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-100 transition-colors">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+                        2
+                      </div>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        Khởi tạo Job & Tải lên S3
+                      </span>
+                    </div>
+                    <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
+                      Bấm nút <b className="text-slate-700">"Bắt đầu tạo Job & Tải lên S3"</b>. Hệ thống sẽ sinh Presigned URL bảo mật và truyền thẳng video lên Amazon S3.
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-100 transition-colors">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+                        3
+                      </div>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        Theo dõi & Kiểm tra Thư viện
+                      </span>
+                    </div>
+                    <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
+                      Xem tiến độ tải lên theo thời gian thực (0% → 100%). Sau khi hoàn thành, chuyển sang mục <b className="text-indigo-600">"Thư viện Video"</b> để theo dõi trạng thái xử lý AI của bài giảng.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Hướng dẫn Sử dụng Q&A */}
+            {guideTab === 'qa' && (
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-violet-900 uppercase tracking-wider">
+                    Hướng dẫn Trợ lý Q&A bài giảng
+                  </span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-semibold border border-violet-100">
+                    AI RAG
+                  </span>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  {/* Step 1 */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-violet-100 transition-colors">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-violet-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+                        1
+                      </div>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        Mở bài giảng từ Thư viện
+                      </span>
+                    </div>
+                    <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
+                      Truy cập menu <b className="text-slate-700">"Thư viện Video"</b>, nhấp chọn bài giảng đã xử lý hoàn tất (<span className="text-emerald-700 font-semibold">COMPLETED</span>).
+                    </p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-violet-100 transition-colors">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-violet-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+                        2
+                      </div>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        Đặt câu hỏi vào khung Chat
+                      </span>
+                    </div>
+                    <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
+                      Gõ câu hỏi bất kỳ về nội dung bài học (ví dụ: <i>"Định lý CAP là gì?"</i>, <i>"Tóm tắt 3 luận điểm chính"</i>).
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-violet-100 transition-colors">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-violet-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+                        3
+                      </div>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        Xem lời giải kèm Mốc nguồn (Citation)
+                      </span>
+                    </div>
+                    <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
+                      Mô hình AI trích xuất nội dung từ Transcript/Slide để trả lời kèm mốc thời gian (ví dụ: <span className="font-mono text-indigo-700 bg-indigo-50 px-1 py-0.5 rounded font-semibold">[00:15:30]</span>). <b>Nhấp vào mốc thời gian để video tự động phát ngay đoạn đó!</b>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Member 4 Responsibility Checklist */}
-          <div className="bg-indigo-50/60 rounded-2xl border border-indigo-100 p-6">
-            <h3 className="font-bold text-indigo-950 text-sm flex items-center gap-2 mb-3">
-              <Info className="w-4 h-4 text-indigo-600" />
-              Nhiệm vụ Thành viên 4 (Frontend)
-            </h3>
-            <ul className="text-xs text-indigo-900/80 space-y-2">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Khởi tạo khung ứng dụng React + Vite + Tailwind CSS</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Trang Đăng ký / Đăng nhập tích hợp Cognito SDK</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Trang Upload: gọi POST /jobs & PUT S3 presigned URL</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Chế độ Mock dữ liệu song hành với Backend Member 1</span>
-              </li>
-            </ul>
+          {/* Quick Tip Box */}
+          <div className="bg-gradient-to-br from-indigo-50/90 to-purple-50/70 rounded-2xl border border-indigo-100/80 p-4 text-xs">
+            <div className="flex items-start space-x-2.5">
+              <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-indigo-950 block mb-0.5">
+                  Mẹo tra cứu nhanh với RAG
+                </span>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Trợ lý Q&A đối chiếu chính xác dữ liệu từ nội dung video đã upload, hạn chế tối đa hallucination (nói sai lệch) và giúp bạn ôn thi, tra cứu kiến thức trong vài giây.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

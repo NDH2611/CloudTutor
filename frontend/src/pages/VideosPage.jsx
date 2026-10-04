@@ -16,7 +16,7 @@ import {
   Layers
 } from 'lucide-react';
 
-export function JobsPage() {
+export function VideosPage() {
   const { idToken } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +105,7 @@ export function JobsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Thư viện Job bài giảng (My Videos)
+            Thư viện bài giảng (My Videos)
           </h1>
           <p className="text-slate-500 mt-1 text-sm">
             Danh sách các bài giảng đã upload và quản lý trạng thái xử lý đa phương tiện.

@@ -6,7 +6,7 @@ import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { UploadPage } from './pages/UploadPage';
-import { JobsPage } from './pages/JobsPage';
+import { VideosPage } from './pages/VideosPage';
 
 export function App() {
   return (
@@ -30,10 +30,10 @@ export function App() {
                 }
               />
               <Route
-                path="/jobs"
+                path="/videos"
                 element={
                   <ProtectedRoute>
-                    <JobsPage />
+                    <VideosPage />
                   </ProtectedRoute>
                 }
               />
