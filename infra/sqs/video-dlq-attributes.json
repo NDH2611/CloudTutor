@@ -1,0 +1,4 @@
+{
+    "MessageRetentionPeriod":  "1209600",
+    "SqsManagedSseEnabled":  "true"
+}

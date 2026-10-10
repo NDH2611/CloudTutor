@@ -1,0 +1,3 @@
+{
+    "Policy":  "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"arn:aws:s3:::s3-cloudtutor-media-251929332061\"},\"StringEquals\":{\"aws:SourceAccount\":\"251929332061\"}},\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-processing\",\"Effect\":\"Allow\",\"Sid\":\"AllowVideoBucketNotifications\"}]}"
+}
