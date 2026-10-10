@@ -1,0 +1,9 @@
+{
+    "account_id":  "251929332061",
+    "video_dlq_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-video-dlq",
+    "region":  "ap-southeast-1",
+    "video_queue_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-video-processing",
+    "video_dlq_arn":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-dlq",
+    "video_queue_arn":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-processing",
+    "media_bucket":  "s3-cloudtutor-media-251929332061"
+}

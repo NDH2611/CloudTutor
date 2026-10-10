@@ -1,0 +1,7 @@
+{
+    "MessageRetentionPeriod":  "345600",
+    "SqsManagedSseEnabled":  "true",
+    "VisibilityTimeout":  "360",
+    "RedrivePolicy":  "{\"deadLetterTargetArn\":\"arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-dlq\",\"maxReceiveCount\":5}",
+    "ReceiveMessageWaitTimeSeconds":  "20"
+}

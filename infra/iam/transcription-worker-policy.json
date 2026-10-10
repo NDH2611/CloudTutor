@@ -1,0 +1,31 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ConsumeVideoQueue",
+                          "Resource":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-processing",
+                          "Action":  [
+                                         "sqs:ReceiveMessage",
+                                         "sqs:DeleteMessage",
+                                         "sqs:GetQueueAttributes"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ReadSourceVideos",
+                          "Resource":  "arn:aws:s3:::s3-cloudtutor-media-251929332061/videos/*",
+                          "Action":  [
+                                         "s3:GetObject"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "StartTranscription",
+                          "Resource":  "*",
+                          "Action":  [
+                                         "transcribe:StartTranscriptionJob"
+                                     ]
+                      }
+                  ]
+}

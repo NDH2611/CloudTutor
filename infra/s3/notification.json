@@ -1,0 +1,21 @@
+{
+    "QueueConfigurations":  [
+                                {
+                                    "Filter":  {
+                                                   "Key":  {
+                                                               "FilterRules":  [
+                                                                                   {
+                                                                                       "Value":  "videos/",
+                                                                                       "Name":  "prefix"
+                                                                                   }
+                                                                               ]
+                                                           }
+                                               },
+                                    "Events":  [
+                                                   "s3:ObjectCreated:*"
+                                               ],
+                                    "QueueArn":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-processing",
+                                    "Id":  "video-upload-to-processing-queue"
+                                }
+                            ]
+}

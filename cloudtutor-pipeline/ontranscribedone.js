@@ -1,40 +1,81 @@
-const { TranscribeClient, GetTranscriptionJobCommand } = require("@aws-sdk/client-transcribe");
-const https = require("https");
+const {
+  TranscribeClient,
+  GetTranscriptionJobCommand,
+} = require("@aws-sdk/client-transcribe");
 
-const transcribeClient = new TranscribeClient({ region: "ap-southeast-1" });
+const transcribeClient = new TranscribeClient({
+  region: process.env.AWS_REGION || "ap-southeast-1",
+});
 
-function fetchJson(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => resolve(JSON.parse(data)));
-    }).on("error", reject);
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(20000),
   });
+
+  if (!response.ok) {
+    throw new Error(`Khong doc duoc transcript: HTTP ${response.status}`);
+  }
+
+  return response.json();
 }
 
 exports.handler = async (event) => {
-  console.log("Nhan duoc su kien Transcribe:", JSON.stringify(event.detail));
+  const detail = event.detail;
 
-  const jobName = event.detail.TranscriptionJobName;
-  const status = event.detail.TranscriptionJobStatus;
-
-  if (status !== "COMPLETED") {
-    console.log(`Job ${jobName} ket thuc voi trang thai ${status}, khong xu ly tiep.`);
-    return { statusCode: 200 };
+  if (!detail?.TranscriptionJobName) {
+    throw new Error("Su kien thieu TranscriptionJobName");
   }
 
-  const result = await transcribeClient.send(new GetTranscriptionJobCommand({
-    TranscriptionJobName: jobName,
-  }));
+  const jobName = detail.TranscriptionJobName;
+  const status = detail.TranscriptionJobStatus;
 
-  const transcriptUri = result.TranscriptionJob.Transcript.TranscriptFileUri;
-  console.log("Transcript URI:", transcriptUri);
+  if (!jobName.startsWith("transcribe-cloudtutor-")) {
+    console.log("Bo qua job ngoai CloudTutor:", jobName);
+    return;
+  }
+
+  console.log("Nhan ket qua:", jobName, status);
+
+  const result = await transcribeClient.send(
+    new GetTranscriptionJobCommand({
+      TranscriptionJobName: jobName,
+    })
+  );
+
+  const job = result.TranscriptionJob;
+
+  if (job.TranscriptionJobStatus === "FAILED") {
+    console.error(
+      "Transcribe that bai:",
+      jobName,
+      job.FailureReason
+    );
+    return;
+  }
+
+  if (job.TranscriptionJobStatus !== "COMPLETED") {
+    throw new Error("Transcribe chua hoan tat");
+  }
+
+  const transcriptUri = job.Transcript?.TranscriptFileUri;
+
+  if (!transcriptUri) {
+    throw new Error("Khong co TranscriptFileUri");
+  }
 
   const transcriptJson = await fetchJson(transcriptUri);
-  const transcriptText = transcriptJson.results.transcripts[0].transcript;
+  const transcriptText =
+    transcriptJson.results?.transcripts?.[0]?.transcript;
+
+  if (typeof transcriptText !== "string") {
+    throw new Error("Output transcript khong dung dinh dang");
+  }
 
   console.log("Noi dung transcript:", transcriptText);
+
+  if (!transcriptText.trim()) {
+    console.log("Transcript rong — can OCR fallback o buoc sau");
+  }
 
   return { statusCode: 200 };
 };
