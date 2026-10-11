@@ -2,7 +2,7 @@
     "Settings":  {
                      "Inputs":  [
                                     {
-                                        "FileInput":  "s3://s3-cloudtutor-media-251929332061/videos/test-user/test-20261011-194110/source.mp4",
+                                        "FileInput":  "s3://s3-cloudtutor-media-251929332061/videos/test-user/ocr-20261012-012043/source.mp4",
                                         "VideoSelector":  {
 
                                                           },
@@ -13,7 +13,7 @@
                                           {
                                               "OutputGroupSettings":  {
                                                                           "FileGroupSettings":  {
-                                                                                                    "Destination":  "s3://s3-cloudtutor-media-251929332061/frames/test-user/test-20261011-194110/"
+                                                                                                    "Destination":  "s3://s3-cloudtutor-media-251929332061/frames/test-user/ocr-20261012-012043/"
                                                                                                 },
                                                                           "Type":  "FILE_GROUP_SETTINGS"
                                                                       }
@@ -21,7 +21,7 @@
                                           {
                                               "OutputGroupSettings":  {
                                                                           "FileGroupSettings":  {
-                                                                                                    "Destination":  "s3://s3-cloudtutor-media-251929332061/derived/test-user/test-20261011-194110/"
+                                                                                                    "Destination":  "s3://s3-cloudtutor-media-251929332061/derived/test-user/ocr-20261012-012043/"
                                                                                                 },
                                                                           "Type":  "FILE_GROUP_SETTINGS"
                                                                       }
@@ -31,7 +31,7 @@
     "UserMetadata":  {
                          "frame_interval_seconds":  "5",
                          "project":  "cloudtutor",
-                         "job_id":  "test-20261011-194110",
+                         "job_id":  "ocr-20261012-012043",
                          "stage":  "extract-frames",
                          "owner_id":  "test-user"
                      },
