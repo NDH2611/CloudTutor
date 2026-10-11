@@ -32,7 +32,6 @@ exports.handler = async (event) => {
       }
 
       // videos/{owner_id}/{job_id}/source.mp4
-      // Vẫn chấp nhận tên file original.mp4 như code cũ.
       const parts = key.split("/");
 
       if (
