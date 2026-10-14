@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "job_id": "test-20261011-194110",
+  "owner_id": "test-user",
+  "transcription_job_name": "transcribe-cloudtutor-test-20261011-194110",
+  "source": "ASR",
+  "text": "It's late now. Are you still up? What are you thinking or worrying about? Do you still remember your dream? Is it getting closer or further?",
+  "segments": [
+    {
+      "start_time": 0.16,
+      "end_time": 1.35,
+      "text": "It's late now.",
+      "source": "ASR"
+    },
+    {
+      "start_time": 1.64,
+      "end_time": 2.66,
+      "text": "Are you still up?",
+      "source": "ASR"
+    },
+    {
+      "start_time": 3.63,
+      "end_time": 6.34,
+      "text": "What are you thinking or worrying about?",
+      "source": "ASR"
+    },
+    {
+      "start_time": 6.79,
+      "end_time": 8.58,
+      "text": "Do you still remember your dream?",
+      "source": "ASR"
+    },
+    {
+      "start_time": 8.95,
+      "end_time": 11.46,
+      "text": "Is it getting closer or further?",
+      "source": "ASR"
+    }
+  ],
+  "needs_ocr": false,
+  "warnings": []
+}
