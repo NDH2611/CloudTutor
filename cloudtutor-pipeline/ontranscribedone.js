@@ -8,6 +8,10 @@ const {
   PutObjectCommand,
 } = require("@aws-sdk/client-s3");
 
+const { 
+  publishTranscript 
+} = require("./publishTranscript");
+
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const transcribeClient = new TranscribeClient({ region });
 const s3Client = new S3Client({ region });
@@ -189,6 +193,18 @@ exports.handler = async (event) => {
 
   console.log("Da luu ket qua:", outputPrefix);
   console.log("So doan:", segments.length, "Can OCR:", normalized.needs_ocr);
+
+  if (!normalized.needs_ocr) {
+    await publishTranscript({
+      bucket,
+      key: `${outputPrefix}/normalized-transcript.json`,
+      jobId,
+      ownerId,
+      source: "ASR",
+    });
+  } else {
+    console.log("ASR rong: chua gui AI, cho OCR fallback");
+  }
 
   return { statusCode: 200 };
 };
