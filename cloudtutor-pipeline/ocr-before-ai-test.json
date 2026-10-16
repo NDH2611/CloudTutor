@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "job_id": "ocr-auto-20261016-150459",
+  "owner_id": "test-user",
+  "mediaconvert_job_id": "1792137979214-h5kyyr",
+  "source": "OCR",
+  "text": "OLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\n\nOLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nNgoài anh em có nhung ai,\nbên em hiên tai?\n\nOLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nVì yêu em nên anh còn ó lai\nbên em hiên tai?\n\nOLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nVì yêu em nên anh còn 8 lai\nCuôc dòi cho em tiêng ca\n\nOLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nYên vui mái nhà, nhung dôi vói em\nKhông bao giò là tât cá",
+  "segments": [
+    {
+      "start_time": 0,
+      "end_time": 10,
+      "text": "OLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir",
+      "source": "OCR"
+    },
+    {
+      "start_time": 10,
+      "end_time": 20,
+      "text": "OLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nNgoài anh em có nhung ai,\nbên em hiên tai?",
+      "source": "OCR"
+    },
+    {
+      "start_time": 20,
+      "end_time": 25,
+      "text": "OLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nVì yêu em nên anh còn ó lai\nbên em hiên tai?",
+      "source": "OCR"
+    },
+    {
+      "start_time": 25,
+      "end_time": 30,
+      "text": "OLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nVì yêu em nên anh còn 8 lai\nCuôc dòi cho em tiêng ca",
+      "source": "OCR"
+    },
+    {
+      "start_time": 30,
+      "end_time": 35,
+      "text": "OLD MUSIC\nKaraoke\nEm cúa quá khir\nTone Nir\nYên vui mái nhà, nhung dôi vói em\nKhông bao giò là tât cá",
+      "source": "OCR"
+    }
+  ],
+  "frame_interval_seconds": 5,
+  "frame_count": 7,
+  "duration_seconds": 35,
+  "needs_vision": false,
+  "warnings": [
+    "OCR_TIMESTAMPS_ARE_SAMPLED"
+  ]
+}
