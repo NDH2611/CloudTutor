@@ -96,17 +96,30 @@ exports.handler = async (event) => {
 
   if (detail.status !== "COMPLETE") return;
 
-  // Lấy thời lượng đầu ra từ sự kiện MediaConvert.
-  const durations = (detail.outputGroupDetails || [])
-    .flatMap(group => group.outputDetails || [])
-    .map(output => Number(output.durationInMs) / 1000)
-    .filter(value => Number.isFinite(value) && value > 0);
+    // Chỉ lấy thời lượng video MP4 phụ, bỏ thời lượng nhóm ảnh.
+  const derivedPrefix =
+    `s3://${bucket}/derived/${ownerId}/${jobId}/`;
 
-  if (durations.length === 0) {
-    throw new Error("Su kien COMPLETE thieu thoi luong video");
+  const videoOutputs = (detail.outputGroupDetails || [])
+    .flatMap(group => group.outputDetails || [])
+    .filter(output =>
+      (output.outputFilePaths || []).some(path =>
+        path.startsWith(derivedPrefix) &&
+        /\.mp4$/i.test(path)
+      )
+    );
+
+  if (videoOutputs.length !== 1) {
+    throw new Error("Khong xac dinh duoc duy nhat video derived");
   }
 
-  const duration = Math.max(...durations);
+  const duration = Number(videoOutputs[0].durationInMs) / 1000;
+
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new Error("Thoi luong video derived khong hop le");
+  }
+
+  console.log("Thoi luong video:", duration);
   const prefix = `frames/${ownerId}/${jobId}/`;
   const frames = [];
   let token;
@@ -192,7 +205,10 @@ exports.handler = async (event) => {
     console.log("Da OCR frame:", frame.key);
   }
 
-  const warnings = ["OCR_TIMESTAMPS_ARE_SAMPLED"];
+const warnings = [
+  "OCR_TIMESTAMPS_ARE_SAMPLED",
+  "OCR_TEXT_REQUIRES_REVIEW",
+];
   if (duration > (frames[frames.length - 1].index + 1) * interval) {
     warnings.push("FRAME_COVERAGE_TRUNCATED");
   }

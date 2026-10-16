@@ -13,7 +13,10 @@
                                               {
                                                   "outputDetails":  [
                                                                         {
-                                                                            "durationInMs":  35000
+                                                                            "outputFilePaths":  [
+                                                                                                    "s3://s3-cloudtutor-media-251929332061/derived/test-user/ocr-auto-20261016-150459/source_derived.mp4"
+                                                                                                ],
+                                                                            "durationInMs":  30040
                                                                         }
                                                                     ]
                                               }
