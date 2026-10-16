@@ -1,0 +1,22 @@
+{
+    "detail":  {
+                   "jobId":  "1792137979214-h5kyyr",
+                   "status":  "COMPLETE",
+                   "userMetadata":  {
+                                        "frame_interval_seconds":  "5",
+                                        "project":  "cloudtutor",
+                                        "job_id":  "ocr-auto-20261016-150459",
+                                        "stage":  "extract-frames",
+                                        "owner_id":  "test-user"
+                                    },
+                   "outputGroupDetails":  [
+                                              {
+                                                  "outputDetails":  [
+                                                                        {
+                                                                            "durationInMs":  35000
+                                                                        }
+                                                                    ]
+                                              }
+                                          ]
+               }
+}

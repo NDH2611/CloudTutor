@@ -9,6 +9,41 @@ const {
   DetectTextCommand,
 } = require("@aws-sdk/client-rekognition");
 
+const { 
+  publishTranscript 
+} = require("./publishTranscript");
+
+// Chuẩn hóa để so sánh, vẫn giữ dấu tiếng Việt.
+function comparisonKey(text) {
+  return text
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+// Loại dòng giống nhau trong cùng một frame.
+function buildFrameText(lines) {
+  const seen = new Set();
+  const texts = [];
+
+  for (const line of lines) {
+    const text = (line.DetectedText || "")
+      .normalize("NFC")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const key = comparisonKey(text);
+
+    if (!key || seen.has(key)) continue;
+
+    seen.add(key);
+    texts.push(text);
+  }
+
+  return texts.join("\n");
+}
+
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const s3 = new S3Client({ region });
 const rekognition = new RekognitionClient({ region });
@@ -130,7 +165,7 @@ exports.handler = async (event) => {
         a.Geometry.BoundingBox.Left - b.Geometry.BoundingBox.Left
       );
 
-    const text = lines.map(item => item.DetectedText).join("\n").trim();
+    const text = buildFrameText(lines);
     const start = frame.index * interval;
     const end = Math.min(start + interval, duration);
 
@@ -139,9 +174,11 @@ exports.handler = async (event) => {
     // Gộp chữ giống hệt nhau ở các frame liên tiếp.
     const previous = segments[segments.length - 1];
 
-    if (previous &&
-        previous.text === text &&
-        Math.abs(previous.end_time - start) < 0.01) {
+    if (
+      previous &&
+      comparisonKey(previous.text) === comparisonKey(text) &&
+      Math.abs(previous.end_time - start) < 0.01
+    ) {
       previous.end_time = end;
     } else {
       segments.push({
@@ -190,5 +227,18 @@ exports.handler = async (event) => {
 
   console.log("Da luu OCR:", resultPrefix);
   console.log("So doan:", segments.length);
+
+  if (normalized.text.trim() && normalized.segments.length > 0) {
+    await publishTranscript({
+      bucket,
+      key: `${resultPrefix}/normalized-ocr.json`,
+      jobId,
+      ownerId,
+      source: "OCR",
+    });
+  } else {
+    console.log("OCR rong: chua gui AI, can Vision fallback");
+  }
+
   return { statusCode: 200 };
 };
