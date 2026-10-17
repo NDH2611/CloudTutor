@@ -12,6 +12,10 @@ const {
   publishTranscript 
 } = require("./publishTranscript");
 
+const { 
+  startOcrFallback 
+} = require("./startOcrFallback");
+
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const transcribeClient = new TranscribeClient({ region });
 const s3Client = new S3Client({ region });
@@ -203,7 +207,21 @@ exports.handler = async (event) => {
       source: "ASR",
     });
   } else {
-    console.log("ASR rong: chua gui AI, cho OCR fallback");
+    console.log("ASR rong: bat dau OCR fallback");
+
+    const mediaConvertJobId = await startOcrFallback({
+      bucket,
+      videoKey: mediaUri.slice(prefix.length),
+      ownerId,
+      jobId,
+    });
+
+    await saveJson(bucket, `${outputPrefix}/ocr-job.json`, {
+      job_id: jobId,
+      owner_id: ownerId,
+      mediaconvert_job_id: mediaConvertJobId,
+      status: "SUBMITTED",
+    });
   }
 
   return { statusCode: 200 };
