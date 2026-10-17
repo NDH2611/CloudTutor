@@ -206,16 +206,22 @@ export function UploadPage() {
                     setProgress(0);
                     setJobInfo(null);
                   }}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-medium transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors"
                 >
                   Tải lên video khác
                 </button>
                 <button
-                  onClick={() => navigate('/jobs')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-200 transition-colors flex items-center justify-center space-x-1.5"
+                  onClick={() => navigate(`/videos/${jobInfo.job_id}`)}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 transition-colors flex items-center justify-center space-x-1.5"
                 >
-                  <span>Xem thư viện bài giảng</span>
+                  <span>Theo dõi tiến trình & Xem bài giảng</span>
                   <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => navigate('/videos')}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors"
+                >
+                  Về Thư viện
                 </button>
               </div>
             </div>

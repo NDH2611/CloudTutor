@@ -1,11 +1,12 @@
 import axios from 'axios';
-import { INITIAL_MOCK_JOBS } from './mockData';
+import { INITIAL_MOCK_JOBS, MOCK_JOB_DETAILS } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false' || !API_BASE_URL;
+export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || !API_BASE_URL;
 
 // Local storage key for persisting jobs during frontend testing
 const LOCAL_STORAGE_JOBS_KEY = 'cloudtutor_jobs_v1';
+const LOCAL_STORAGE_DETAILS_KEY = 'cloudtutor_job_details_v1';
 
 function getStoredJobs() {
   const saved = localStorage.getItem(LOCAL_STORAGE_JOBS_KEY);
@@ -24,50 +25,80 @@ function saveStoredJobs(jobs) {
   localStorage.setItem(LOCAL_STORAGE_JOBS_KEY, JSON.stringify(jobs));
 }
 
+function getStoredDetails() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_DETAILS_KEY);
+  if (!saved) {
+    localStorage.setItem(LOCAL_STORAGE_DETAILS_KEY, JSON.stringify(MOCK_JOB_DETAILS));
+    return MOCK_JOB_DETAILS;
+  }
+  try {
+    return { ...MOCK_JOB_DETAILS, ...JSON.parse(saved) };
+  } catch {
+    return MOCK_JOB_DETAILS;
+  }
+}
+
+function saveStoredDetails(details) {
+  localStorage.setItem(LOCAL_STORAGE_DETAILS_KEY, JSON.stringify(details));
+}
+
 /**
  * Create a new Lecture Job
- * Contract: POST /jobs -> { job_id, presigned_url, status, s3_key }
+ * Contract (router.js): POST /jobs { filename } 
+ * -> { job_id, status: "CREATED", upload_url, upload_headers: { "Content-Type": "video/mp4" }, expires_in: 900 }
  */
-export async function createJob({ fileName, fileSize, contentType = 'video/mp4', token = '' }) {
+export async function createJob({ fileName, fileSize = 0, token = '' }) {
   if (USE_MOCK) {
-    await new Promise((r) => setTimeout(r, 600)); // Simulate API Gateway latency
+    await new Promise((r) => setTimeout(r, 500)); // Simulate API Gateway latency
     const jobId = 'job-' + Math.random().toString(36).substring(2, 10);
-    const mockPresignedUrl = `https://cloudtutor-bucket.s3.ap-southeast-1.amazonaws.com/videos/mock_user/${jobId}/${encodeURIComponent(fileName)}?AWSAccessKeyId=MOCK&Signature=MOCK&Expires=1800`;
-    
+    const mockUploadUrl = `https://s3-cloudtutor-media-mock.s3.ap-southeast-1.amazonaws.com/videos/mock_user/${jobId}/source.mp4?mock=true`;
+
     const newJob = {
       job_id: jobId,
-      file_name: fileName,
+      original_filename: fileName || 'lecture.mp4',
+      file_name: fileName || 'lecture.mp4',
       file_size: fileSize,
-      format: contentType,
       status: 'CREATED',
       created_at: new Date().toISOString(),
-      presigned_url: mockPresignedUrl,
-      s3_key: `videos/mock_user/${jobId}/${fileName}`,
-      total_tasks: 4,
-      completed_tasks: 0,
-      failed_tasks: 0,
-      summary_preview: 'Job created. Ready for cloud worker processing pipeline.'
+      upload_url: mockUploadUrl,
+      presigned_url: mockUploadUrl,
+      warnings: [],
+      error_code: null
     };
 
     const currentJobs = getStoredJobs();
     saveStoredJobs([newJob, ...currentJobs]);
 
+    // Initialize mock detail for this job in processing state
+    const currentDetails = getStoredDetails();
+    currentDetails[jobId] = {
+      job_id: jobId,
+      original_filename: fileName,
+      status: 'CREATED',
+      created_at: newJob.created_at,
+      warnings: [],
+      error_code: null,
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      createdAtTimestamp: Date.now()
+    };
+    saveStoredDetails(currentDetails);
+
     return {
       job_id: jobId,
-      presigned_url: mockPresignedUrl,
       status: 'CREATED',
-      s3_key: newJob.s3_key,
+      upload_url: mockUploadUrl,
+      presigned_url: mockUploadUrl,
+      upload_headers: { 'Content-Type': 'video/mp4' },
+      expires_in: 900,
       isMock: true
     };
   }
 
-  // Live API Gateway call
+  // Live API Gateway call matching cloudtutor-api/src/router.js contract
   const response = await axios.post(
     `${API_BASE_URL}/jobs`,
     {
-      file_name: fileName,
-      file_size: fileSize,
-      content_type: contentType
+      filename: fileName || 'source.mp4'
     },
     {
       headers: {
@@ -76,14 +107,24 @@ export async function createJob({ fileName, fileSize, contentType = 'video/mp4',
       }
     }
   );
-  return response.data;
+
+  return {
+    job_id: response.data.job_id,
+    status: response.data.status,
+    upload_url: response.data.upload_url,
+    presigned_url: response.data.upload_url,
+    upload_headers: response.data.upload_headers || { 'Content-Type': 'video/mp4' },
+    expires_in: response.data.expires_in,
+    isMock: false
+  };
 }
 
 /**
  * Upload Video to S3 directly via Presigned URL
+ * Direct S3 PUT with Content-Type matching presigned signature (video/mp4)
  */
-export async function uploadToS3(presignedUrl, file, onProgress, abortSignal) {
-  if (USE_MOCK || presignedUrl.includes('mock_user') || presignedUrl.includes('AWSAccessKeyId=MOCK')) {
+export async function uploadToS3(uploadUrl, file, onProgress, abortSignal) {
+  if (USE_MOCK || uploadUrl.includes('mock_user') || uploadUrl.includes('mock=true')) {
     // Realistic upload simulation with chunking and progress callback
     return new Promise((resolve, reject) => {
       let currentProgress = 0;
@@ -94,40 +135,48 @@ export async function uploadToS3(presignedUrl, file, onProgress, abortSignal) {
           return;
         }
 
-        // Increment between 8% and 20%
-        currentProgress += Math.floor(Math.random() * 12) + 8;
+        currentProgress += Math.floor(Math.random() * 12) + 10;
         if (currentProgress >= 100) {
           currentProgress = 100;
           clearInterval(interval);
           onProgress(100);
-          
-          // Update status in local storage to UPLOADED
+
+          // Update status in local storage to QUEUED (ready for pipeline)
           const jobs = getStoredJobs();
-          const updated = jobs.map(j => {
-            if (presignedUrl.includes(j.job_id)) {
-              return { ...j, status: 'UPLOADED' };
+          const updated = jobs.map((j) => {
+            if (uploadUrl.includes(j.job_id)) {
+              return { ...j, status: 'QUEUED' };
             }
             return j;
           });
           saveStoredJobs(updated);
 
+          const details = getStoredDetails();
+          for (const key in details) {
+            if (uploadUrl.includes(key)) {
+              details[key].status = 'QUEUED';
+              details[key].uploadedAt = Date.now();
+            }
+          }
+          saveStoredDetails(details);
+
           setTimeout(() => {
             resolve({
               status: 200,
-              message: 'Mock S3 PUT 200 OK (ETag: "9b2cf535f27731c974343645a3985328")'
+              message: 'Mock S3 Direct PUT 200 OK (ETag: "9b2cf535f27731c974343645a3985328")'
             });
           }, 300);
         } else {
           onProgress(currentProgress);
         }
-      }, 250);
+      }, 200);
     });
   }
 
-  // Live direct S3 PUT
-  return axios.put(presignedUrl, file, {
+  // Live direct S3 PUT binary upload
+  return axios.put(uploadUrl, file, {
     headers: {
-      'Content-Type': file.type || 'video/mp4'
+      'Content-Type': 'video/mp4'
     },
     signal: abortSignal,
     onUploadProgress: (progressEvent) => {
@@ -141,33 +190,118 @@ export async function uploadToS3(presignedUrl, file, onProgress, abortSignal) {
 
 /**
  * Fetch list of all jobs for current user
+ * Contract (router.js): GET /jobs?limit=20&next_token=...
+ * -> { items: [{ job_id, status, original_filename, created_at }], next_token }
  */
-export async function fetchJobs(token = '') {
+export async function fetchJobs(token = '', limit = 20, nextToken = null) {
   if (USE_MOCK) {
-    await new Promise((r) => setTimeout(r, 300));
-    return getStoredJobs();
+    await new Promise((r) => setTimeout(r, 250));
+    return {
+      items: getStoredJobs(),
+      next_token: null
+    };
   }
 
+  const params = {};
+  if (limit) params.limit = limit;
+  if (nextToken) params.next_token = nextToken;
+
   const res = await axios.get(`${API_BASE_URL}/jobs`, {
+    params,
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
-  return res.data.jobs || res.data;
+
+  return {
+    items: res.data.items || res.data.jobs || (Array.isArray(res.data) ? res.data : []),
+    next_token: res.data.next_token || null
+  };
 }
 
 /**
- * Delete a job (for library management testing)
+ * Fetch complete Job Detail (including Video URL, Transcript chunks, Summary, Quiz)
+ * Contract (router.js): GET /jobs/{id}
+ * -> { job_id, status, original_filename, created_at, warnings, error_code, content_source, transcript, chunks, summary, quiz, video_url }
+ */
+export async function getJobDetail(jobId, token = '') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 300));
+    const details = getStoredDetails();
+    let detail = details[jobId];
+
+    if (!detail) {
+      // Check stored jobs list
+      const jobs = getStoredJobs();
+      const basicJob = jobs.find((j) => j.job_id === jobId);
+      if (basicJob) {
+        detail = {
+          ...basicJob,
+          content_source: 'ASR',
+          warnings: [],
+          video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+        };
+      } else {
+        throw new Error('NOT_FOUND');
+      }
+    }
+
+    // In Mock mode: if job was recently created and uploaded, simulate pipeline progression
+    if (detail.uploadedAt && detail.status !== 'COMPLETED') {
+      const elapsed = Date.now() - detail.uploadedAt;
+      if (elapsed < 3000) {
+        detail.status = 'QUEUED';
+      } else if (elapsed < 7000) {
+        detail.status = 'TRANSCRIBING';
+      } else if (elapsed < 12000) {
+        detail.status = 'PROCESSING_AI';
+      } else {
+        detail.status = 'COMPLETED';
+        detail.content_source = 'ASR';
+        detail.chunks = MOCK_JOB_DETAILS['job-98a4b12c'].chunks;
+        detail.summary = MOCK_JOB_DETAILS['job-98a4b12c'].summary;
+        detail.quiz = MOCK_JOB_DETAILS['job-98a4b12c'].quiz;
+
+        // Also update stored job list status
+        const jobs = getStoredJobs();
+        const updated = jobs.map((j) => (j.job_id === jobId ? { ...j, status: 'COMPLETED' } : j));
+        saveStoredJobs(updated);
+      }
+      details[jobId] = detail;
+      saveStoredDetails(details);
+    }
+
+    return detail;
+  }
+
+  const res = await axios.get(`${API_BASE_URL}/jobs/${jobId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return res.data;
+}
+
+/**
+ * Delete a job (marks DELETING, deletes S3 files, marks DELETED)
+ * Contract (router.js): DELETE /jobs/{id} -> { job_id, status: "DELETED" }
  */
 export async function deleteJob(jobId, token = '') {
   if (USE_MOCK) {
-    const jobs = getStoredJobs().filter(j => j.job_id !== jobId);
+    const jobs = getStoredJobs().filter((j) => j.job_id !== jobId);
     saveStoredJobs(jobs);
-    return { success: true };
+    const details = getStoredDetails();
+    delete details[jobId];
+    saveStoredDetails(details);
+    return { job_id: jobId, status: 'DELETED' };
   }
 
-  await axios.delete(`${API_BASE_URL}/jobs/${jobId}`, {
-    headers: { Authorization: `Bearer ${token}` }
+  const res = await axios.delete(`${API_BASE_URL}/jobs/${jobId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });
-  return { success: true };
+
+  return res.data;
 }
