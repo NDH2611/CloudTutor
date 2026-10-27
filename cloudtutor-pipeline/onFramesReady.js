@@ -113,7 +113,10 @@ exports.handler = async (event) => {
     source: "OCR",
   });
 
-  if (recovery.action !== "PROCESS") {
+  if (
+    recovery.action !== "PROCESS" &&
+    recovery.action !== "RECOVER_VISION"
+  ) {
     console.log("Bo qua hoac khoi phuc OCR:", recovery);
     return { statusCode: 200 };
   }
@@ -142,6 +145,21 @@ exports.handler = async (event) => {
   }
 
   console.log("Thoi luong video:", duration);
+
+  if (recovery.action === "RECOVER_VISION") {
+    const visionResult = await routeOcrToVision({
+      ownerId,
+      jobId,
+      processingVersion,
+      mediaConvertJobId: detail.jobId,
+      durationSeconds: duration,
+      frameIntervalSeconds: interval,
+    });
+
+    console.log("Da phuc hoi ban giao Vision:", visionResult);
+    return { statusCode: 200 };
+  }
+
   const prefix = `frames/${ownerId}/${jobId}/`;
   const frames = [];
   let token;

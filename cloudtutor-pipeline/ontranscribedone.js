@@ -8,6 +8,11 @@ const {
   PutObjectCommand,
 } = require("@aws-sdk/client-s3");
 
+const {
+  DynamoDBClient,
+  UpdateItemCommand,
+} = require("@aws-sdk/client-dynamodb");
+
 const { 
   publishTranscript 
 } = require("./publishTranscript");
@@ -28,6 +33,9 @@ const { recoverTextHandoff } = require("./recoverTextHandoff");
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const transcribeClient = new TranscribeClient({ region });
 const s3Client = new S3Client({ region });
+
+const dynamodb = new DynamoDBClient({ region });
+const jobsTable = process.env.JOBS_TABLE || "ddb-cloudtutor-jobs";
 
 async function fetchJson(url) {
   const response = await fetch(url, {
@@ -103,6 +111,53 @@ async function saveJson(bucket, key, value) {
     ContentType: "application/json",
     Body: JSON.stringify(value, null, 2),
   }));
+}
+
+/**
+ * Chỉ ghi FAILED khi job vẫn thuộc phiên ASR hiện tại.
+ * Nếu job đã chuyển bước hoặc bị xóa, điều kiện sẽ không cho ghi đè.
+ */
+async function markAsrFailed({
+  jobId,
+  ownerId,
+  processingVersion,
+  transcriptionJobName,
+}) {
+  await dynamodb.send(
+    new UpdateItemCommand({
+      TableName: jobsTable,
+
+      Key: {
+        job_id: { S: jobId },
+      },
+
+      ConditionExpression:
+        "#owner = :owner AND #version = :version " +
+        "AND #transcribe = :transcribe AND #status = :asr",
+
+      UpdateExpression:
+        "SET #status = :failed, #error = :error, #updated = :now",
+
+      ExpressionAttributeNames: {
+        "#owner": "owner_id",
+        "#version": "processing_version",
+        "#transcribe": "transcription_job_name",
+        "#status": "status",
+        "#error": "error_code",
+        "#updated": "updated_at",
+      },
+
+      ExpressionAttributeValues: {
+        ":owner": { S: ownerId },
+        ":version": { S: processingVersion },
+        ":transcribe": { S: transcriptionJobName },
+        ":asr": { S: "PROCESSING_ASR" },
+        ":failed": { S: "FAILED" },
+        ":error": { S: "ASR_SERVICE_FAILED" },
+        ":now": { S: new Date().toISOString() },
+      },
+    })
+  );
 }
 
 exports.handler = async (event) => {
@@ -187,8 +242,15 @@ exports.handler = async (event) => {
       failure_reason: job.FailureReason || "Unknown",
     });
 
+    await markAsrFailed({
+      jobId,
+      ownerId,
+      processingVersion,
+      transcriptionJobName: jobName,
+    });
+
     console.error("Transcribe that bai:", jobName, job.FailureReason);
-    // Cảnh báo lỗi dịch vụ và cập nhật DynamoDB sẽ bổ sung sau.
+
     return { statusCode: 200 };
   }
 

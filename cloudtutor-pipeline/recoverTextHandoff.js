@@ -139,9 +139,27 @@ async function recoverTextHandoff({
 
   // Event ASR/OCR đến muộn khi job đã chuyển sang Vision.
   if (status === "PROCESSING_VISION") {
+    if (source === "OCR") {
+      // Event OCR có thể được nhận lại sau khi đã chuyển
+      // trạng thái nhưng trước khi gửi SQS Vision.
+      return {
+        action: "RECOVER_VISION",
+      };
+    }
+
+    // Event ASR đến muộn không khởi động lại OCR.
     return {
       action: "SKIPPED",
       reason: "JOB_ALREADY_IN_VISION",
+    };
+  }
+
+  // Job đã thất bại là trạng thái kết thúc của phiên hiện tại.
+  // Không xử lý lại event cũ hoặc ghi đè lỗi.
+  if (status === "FAILED") {
+    return {
+      action: "SKIPPED",
+      reason: "JOB_FAILED",
     };
   }
 

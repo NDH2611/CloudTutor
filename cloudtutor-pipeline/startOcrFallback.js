@@ -91,7 +91,9 @@ async function startOcrFallback({
   }
 
   const token = createHash("sha256")
-    .update(`cloudtutor-ocr-v1:${bucket}/${videoKey}`)
+    .update(
+      `cloudtutor-ocr-v2:${bucket}/${videoKey}:${processingVersion}`
+    )
     .digest("hex");
 
   const response = await mediaConvert.send(
