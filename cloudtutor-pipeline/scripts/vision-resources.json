@@ -1,0 +1,8 @@
+{
+    "account_id":  "251929332061",
+    "vision_dlq_arn":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-vision-dlq",
+    "region":  "ap-southeast-1",
+    "vision_dlq_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-dlq",
+    "vision_queue_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-processing",
+    "vision_queue_arn":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-vision-processing"
+}
