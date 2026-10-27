@@ -1,10 +1,12 @@
 const {
   S3Client,
   GetObjectCommand,
+  PutObjectCommand,
 } = require("@aws-sdk/client-s3");
 
 const { describeFrame } = require("./geminiVision");
 const { selectVisionFrames } = require("./selectVisionFrames");
+const { checkVisionJob } = require("./visionJobCheck");
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION || "ap-southeast-1",
@@ -37,7 +39,7 @@ async function readFrame(frameKey) {
   return bytes;
 }
 
-exports.handler = async (event) => {
+async function processVision(event) {
   if (!bucket) {
     throw new Error("Thieu bien moi truong MEDIA_BUCKET");
   }
@@ -45,11 +47,23 @@ exports.handler = async (event) => {
   // Event thử trực tiếp. Chưa phải event nhận từ SQS.
   const ownerId = event?.owner_id;
   const jobId = event?.job_id;
+  const processingVersion = event?.processing_version;
   const duration = Number(event?.duration_seconds);
   const interval = Number(event?.frame_interval_seconds);
 
+  // Kiểm tra job trước khi đọc ảnh hoặc gọi Gemini.
+  const jobCheck = await checkVisionJob({
+    jobId,
+    ownerId,
+    processingVersion,
+  });
+
+  if (!jobCheck.allowed) {
+    throw new Error(`Khong the xu ly job Vision: ${jobCheck.reason}`);
+  }
+
   // Giới hạn 3 ảnh cho lần kiểm thử này.
-  const maxFrames = 3;
+  const maxFrames = 1;
 
   console.log("Dang tim frame cho job:", jobId);
 
@@ -90,17 +104,73 @@ exports.handler = async (event) => {
     });
   }
 
-  return {
-    test: "VISION_AUTO_SELECT_TEST",
+    const output = {
+    schema_version: "1.0",
+    test: "VISION_S3_SAVE_TEST",
     job_id: jobId,
     owner_id: ownerId,
     source: "VISION",
-    selected_frame_count: frames.length,
+    text: segments.map((segment) => segment.text).join("\n\n"),
     segments,
+    selected_frame_count: frames.length,
+    frame_interval_seconds: interval,
+    duration_seconds: duration,
     usage,
     warnings: [
       "AI_GENERATED_VISUAL_DESCRIPTION",
       "VISION_TIMESTAMPS_ARE_SAMPLED",
     ],
   };
+
+  // Tên riêng cho lần thử; không ghi đè ASR/OCR.
+  const outputKey =
+    `results/${ownerId}/${jobId}/vision-save-test.json`;
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: outputKey,
+      ContentType: "application/json",
+      Body: JSON.stringify(output, null, 2),
+    })
+  );
+
+  console.log("Da luu ket qua Vision thu nghiem:", outputKey);
+
+  return {
+    test: "VISION_S3_SAVE_TEST",
+    bucket,
+    output_key: outputKey,
+    selected_frame_count: frames.length,
+    warnings: output.warnings,
+  };
+};
+
+exports.handler = async (event) => {
+  if (!Array.isArray(event?.Records) || event.Records.length === 0) {
+    throw new Error("Event khong co SQS Records");
+  }
+
+  for (const record of event.Records) {
+    if (record.eventSource !== "aws:sqs") {
+      throw new Error("Event khong phai tu SQS");
+    }
+
+    let message;
+
+    try {
+      message = JSON.parse(record.body);
+    } catch {
+      throw new Error("SQS message body khong phai JSON hop le");
+    }
+
+    const result = await processVision(message);
+
+    console.log("Xu ly message Vision xong:", {
+      message_id: record.messageId,
+      job_id: result.output_key,
+    });
+  }
+
+  return { statusCode: 200 };
 };
