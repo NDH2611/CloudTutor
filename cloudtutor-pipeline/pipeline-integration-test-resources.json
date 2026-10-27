@@ -1,0 +1,8 @@
+{
+    "ocr_function":  "lambda-cloudtutor-test-ocr-c6491b01",
+    "vision_test_queue_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-integration-test-c6491b01",
+    "suffix":  "c6491b01",
+    "worker_function":  "lambda-cloudtutor-test-worker-c6491b01",
+    "completion_function":  "lambda-cloudtutor-test-completion-c6491b01",
+    "ai_test_queue_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-handoff-test-fb713c6d"
+}

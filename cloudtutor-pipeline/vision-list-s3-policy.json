@@ -1,0 +1,19 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ListVisionFramesAndResults",
+                          "Resource":  "arn:aws:s3:::s3-cloudtutor-media-251929332061",
+                          "Condition":  {
+                                            "StringLike":  {
+                                                               "s3:prefix":  [
+                                                                                 "frames/*",
+                                                                                 "results/*"
+                                                                             ]
+                                                           }
+                                        },
+                          "Action":  "s3:ListBucket"
+                      }
+                  ]
+}

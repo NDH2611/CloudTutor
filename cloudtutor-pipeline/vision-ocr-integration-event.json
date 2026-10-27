@@ -1,0 +1,9 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"schema_version\":\"1.0\",\"owner_id\":\"test-user\",\"job_id\":\"ocr-empty-test-26ee943305a34608b889ca4e5fba6849\",\"processing_version\":\"1\",\"duration_seconds\":30.04,\"frame_interval_seconds\":5}",
+                        "messageId":  "4f8742fb-e838-45cd-a298-b66dc27aba23",
+                        "eventSource":  "aws:sqs"
+                    }
+                ]
+}

@@ -11,8 +11,20 @@ const mediaConvert = new MediaConvertClient({
   region: process.env.AWS_REGION || "ap-southeast-1",
 });
 
-async function startOcrFallback({ bucket, videoKey, ownerId, jobId }) {
+async function startOcrFallback({
+  bucket,
+  videoKey,
+  ownerId,
+  jobId,
+  processingVersion,
+}) {
   const roleArn = process.env.MEDIACONVERT_ROLE_ARN;
+  if (
+    typeof processingVersion !== "string" ||
+    !processingVersion
+  ) {
+    throw new Error("Thieu processing_version cho MediaConvert");
+  }
 
   if (!roleArn) {
     throw new Error("Thieu MEDIACONVERT_ROLE_ARN");
@@ -93,6 +105,7 @@ async function startOcrFallback({ bucket, videoKey, ownerId, jobId }) {
         stage: "extract-frames",
         owner_id: ownerId,
         job_id: jobId,
+        processing_version: processingVersion,
         frame_interval_seconds: String(interval),
       },
     })

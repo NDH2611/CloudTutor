@@ -1,0 +1,9 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"duration_seconds\":30.04,\"processing_version\":\"1\",\"frame_interval_seconds\":5,\"job_id\":\"vision-first-run-test-9ac48cdd6cce4577901223b852669929\",\"owner_id\":\"test-user\"}",
+                        "messageId":  "vision-first-run-test-001",
+                        "eventSource":  "aws:sqs"
+                    }
+                ]
+}

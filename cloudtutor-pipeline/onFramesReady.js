@@ -13,6 +13,10 @@ const {
   publishTranscript 
 } = require("./publishTranscript");
 
+const { stageTextResult } = require("./stageTextResult");
+const { dispatchTextHandoff } = require("./dispatchTextHandoff");
+const { recoverTextHandoff } = require("./recoverTextHandoff");
+const { routeOcrToVision } = require("./routeOcrToVision");
 // Chuẩn hóa để so sánh, vẫn giữ dấu tiếng Việt.
 function comparisonKey(text) {
   return text
@@ -95,6 +99,24 @@ exports.handler = async (event) => {
   }
 
   if (detail.status !== "COMPLETE") return;
+    const processingVersion = metadata.processing_version;
+
+  if (!processingVersion) {
+    throw new Error("MediaConvert metadata thieu processing_version");
+  }
+
+  const recovery = await recoverTextHandoff({
+    jobId,
+    ownerId,
+    processingVersion,
+    bucket,
+    source: "OCR",
+  });
+
+  if (recovery.action !== "PROCESS") {
+    console.log("Bo qua hoac khoi phuc OCR:", recovery);
+    return { statusCode: 200 };
+  }
 
     // Chỉ lấy thời lượng video MP4 phụ, bỏ thời lượng nhóm ảnh.
   const derivedPrefix =
@@ -218,6 +240,7 @@ const warnings = [
     schema_version: "1.0",
     job_id: jobId,
     owner_id: ownerId,
+    processing_version: processingVersion,
     mediaconvert_job_id: detail.jobId,
     source: "OCR",
     text: segments.map(segment => segment.text).join("\n\n"),
@@ -245,15 +268,44 @@ const warnings = [
   console.log("So doan:", segments.length);
 
   if (normalized.text.trim() && normalized.segments.length > 0) {
-    await publishTranscript({
-      bucket,
-      key: `${resultPrefix}/normalized-ocr.json`,
+    const transcriptKey = `${resultPrefix}/normalized-ocr.json`;
+
+    await stageTextResult({
       jobId,
       ownerId,
+      processingVersion,
+      transcriptKey,
       source: "OCR",
     });
+
+    await dispatchTextHandoff({
+      jobId,
+      ownerId,
+      processingVersion,
+      bucket,
+      source: "OCR",
+    });
+
+    console.log("Da ban giao transcript OCR:", jobId);
   } else {
-    console.log("OCR rong: chua gui AI, can Vision fallback");
+    console.log("OCR rong: chuyen sang Vision fallback");
+
+    if (!processingVersion) {
+      throw new Error(
+        "MediaConvert metadata thieu processing_version"
+      );
+    }
+
+    const visionResult = await routeOcrToVision({
+      ownerId,
+      jobId,
+      processingVersion,
+      mediaConvertJobId: detail.jobId,
+      durationSeconds: duration,
+      frameIntervalSeconds: interval,
+    });
+
+    console.log("Ket qua chuyen Vision:", visionResult);
   }
 
   return { statusCode: 200 };

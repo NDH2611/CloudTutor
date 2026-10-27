@@ -16,6 +16,15 @@ const {
   startOcrFallback 
 } = require("./startOcrFallback");
 
+const {
+  getAsrJobState,
+  markProcessingOcr,
+} = require("./asrJobState");
+
+const { stageTextResult } = require("./stageTextResult");
+const { dispatchTextHandoff } = require("./dispatchTextHandoff");
+const { recoverTextHandoff } = require("./recoverTextHandoff");
+
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const transcribeClient = new TranscribeClient({ region });
 const s3Client = new S3Client({ region });
@@ -131,14 +140,42 @@ exports.handler = async (event) => {
   const parts = mediaUri.slice(prefix.length).split("/");
   const [folder, ownerId, jobId] = parts;
 
-  if (parts.length !== 4 ||
-      folder !== "videos" ||
-      !ownerId ||
-      !jobId ||
-      jobName !== `transcribe-cloudtutor-${jobId}`) {
+  if (
+    parts.length !== 4 ||
+    folder !== "videos" ||
+    !ownerId ||
+    !jobId
+  ) {
     throw new Error("Video key hoac job_id khong hop le");
   }
 
+  const videoKey = mediaUri.slice(prefix.length);
+
+  const asrState = await getAsrJobState({
+    jobId,
+    ownerId,
+    videoKey,
+    transcriptionJobName: jobName,
+  });
+
+  if (asrState.skipped) {
+    console.log("Bo qua Transcribe event:", asrState.reason);
+    return;
+  }
+
+  const processingVersion = asrState.processingVersion;
+    const recovery = await recoverTextHandoff({
+    jobId,
+    ownerId,
+    processingVersion,
+    bucket,
+    source: "ASR",
+  });
+
+  if (recovery.action !== "PROCESS") {
+    console.log("Bo qua hoac khoi phuc ASR:", recovery);
+    return { statusCode: 200 };
+  }
   const outputPrefix = `results/${ownerId}/${jobId}`;
 
   if (job.TranscriptionJobStatus === "FAILED") {
@@ -180,6 +217,7 @@ exports.handler = async (event) => {
     schema_version: "1.0",
     job_id: jobId,
     owner_id: ownerId,
+    processing_version: processingVersion,
     transcription_job_name: jobName,
     source: "ASR",
     text,
@@ -199,21 +237,52 @@ exports.handler = async (event) => {
   console.log("So doan:", segments.length, "Can OCR:", normalized.needs_ocr);
 
   if (!normalized.needs_ocr) {
-    await publishTranscript({
-      bucket,
-      key: `${outputPrefix}/normalized-transcript.json`,
+    if (asrState.status !== "PROCESSING_ASR") {
+      throw new Error("ASR co chu nhung job khong o PROCESSING_ASR");
+    }
+
+    const transcriptKey =
+      `${outputPrefix}/normalized-transcript.json`;
+
+    await stageTextResult({
       jobId,
       ownerId,
+      processingVersion,
+      transcriptKey,
       source: "ASR",
     });
+
+    await dispatchTextHandoff({
+      jobId,
+      ownerId,
+      processingVersion,
+      bucket,
+      source: "ASR",
+    });
+
+    console.log("Da ban giao transcript ASR:", jobId);
   } else {
     console.log("ASR rong: bat dau OCR fallback");
 
+    const ocrState = await markProcessingOcr({
+      jobId,
+      ownerId,
+      videoKey,
+      transcriptionJobName: jobName,
+      processingVersion,
+    });
+
+    if (ocrState.skipped) {
+      console.log("Bo qua OCR:", ocrState.reason);
+      return;
+    }
+
     const mediaConvertJobId = await startOcrFallback({
       bucket,
-      videoKey: mediaUri.slice(prefix.length),
+      videoKey,
       ownerId,
       jobId,
+      processingVersion,
     });
 
     await saveJson(bucket, `${outputPrefix}/ocr-job.json`, {

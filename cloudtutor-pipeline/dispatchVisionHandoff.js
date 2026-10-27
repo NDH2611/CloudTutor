@@ -65,22 +65,30 @@ async function dispatchVisionHandoff({
     throw new Error("Processing version khong khop");
   }
 
-  const allowedStatuses = [
-    "PROCESSING_AI",
-    "COMPLETED",
-    "COMPLETED_WITH_WARNING",
-  ];
+  const status = job.status?.S;
+  const handoffState = job.vision_handoff_state?.S;
 
-  if (!allowedStatuses.includes(job.status?.S)) {
-    throw new Error("Trang thai job khong cho phep ban giao Vision");
-  }
-
-  if (job.vision_handoff_state?.S === "SENT") {
+  // Nếu checkpoint đã SENT, cho phép nhận diện lại khi job
+  // đang xử lý AI hoặc đã hoàn tất.
+  if (
+    handoffState === "SENT" &&
+    [
+      "PROCESSING_AI",
+      "COMPLETED",
+      "COMPLETED_WITH_WARNING",
+    ].includes(status)
+  ) {
     return {
       job_id: jobId,
       handoff_state: "SENT",
       already_sent: true,
     };
+  }
+
+  // Chỉ bắt đầu gửi một checkpoint PENDING khi job
+  // vẫn đang ở trạng thái PROCESSING_AI.
+  if (status !== "PROCESSING_AI") {
+    throw new Error("Trang thai job khong cho phep gui Vision");
   }
 
   if (job.vision_handoff_state?.S !== "PENDING") {

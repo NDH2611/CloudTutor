@@ -1,8 +1,8 @@
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
 /**
- * Gửi một ảnh JPEG đến Gemini và nhận mô tả bằng tiếng Việt.
- * frameBytes: Buffer hoặc Uint8Array chứa dữ liệu ảnh.
+ * Đọc một frame và trả về đánh giá nội dung.
+ * useful=false: frame không cung cấp nội dung trực quan hữu ích.
  */
 async function describeFrame(frameBytes) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -24,12 +24,17 @@ async function describeFrame(frameBytes) {
   }
 
   const prompt = [
-    "Bạn đang mô tả một khung hình từ video cho CloudTutor.",
-    "Viết bằng tiếng Việt từ 3 đến 5 câu.",
-    "Chỉ mô tả nội dung có thể quan sát được trong ảnh.",
+    "Phân tích một khung hình trong video cho CloudTutor.",
+    "Chỉ dựa vào những gì có thể quan sát được trong ảnh.",
     "Không suy đoán lời nói, danh tính hoặc diễn biến ngoài ảnh.",
     "Không tự đặt mốc thời gian.",
-    "Nếu ảnh không có nội dung hữu ích, hãy nói rõ.",
+    "Trả về duy nhất một đối tượng JSON gồm:",
+    '"useful": boolean và "description": string.',
+    "Đặt useful là false nếu ảnh hoàn toàn trống, đen, trắng,",
+    "hoặc không có nội dung trực quan có thể mô tả hữu ích.",
+    "Khi useful là false, description phải là chuỗi rỗng.",
+    "Khi useful là true, description mô tả bằng tiếng Việt",
+    "những nội dung quan sát được trong ảnh.",
   ].join(" ");
 
   const endpoint =
@@ -63,6 +68,7 @@ async function describeFrame(frameBytes) {
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 1024,
+        responseMimeType: "application/json",
       },
     }),
 
@@ -86,18 +92,37 @@ async function describeFrame(frameBytes) {
     throw new Error(`Gemini khong tra ket qua hoan tat: ${reason}`);
   }
 
-  const text = (candidate.content?.parts || [])
+  const responseText = (candidate.content?.parts || [])
     .filter((part) => part.text && !part.thought)
     .map((part) => part.text)
     .join("\n")
     .trim();
 
-  if (!text) {
-    throw new Error("Gemini tra ve van ban rong");
+  let parsed;
+
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    throw new Error("Gemini tra ve JSON khong hop le");
+  }
+
+  if (
+    !parsed ||
+    typeof parsed.useful !== "boolean" ||
+    typeof parsed.description !== "string"
+  ) {
+    throw new Error("JSON Gemini thieu useful hoac description hop le");
+  }
+
+  const description = parsed.description.trim();
+
+  if (parsed.useful && !description) {
+    throw new Error("Gemini danh dau useful nhung mo ta rong");
   }
 
   return {
-    text,
+    useful: parsed.useful,
+    text: parsed.useful ? description : "",
     usage: result.usageMetadata || null,
   };
 }
