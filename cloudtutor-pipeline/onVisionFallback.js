@@ -59,6 +59,16 @@ async function processVision(event) {
   });
 
   if (!jobCheck.allowed) {
+    if (jobCheck.reason === "JOB_DELETED") {
+      console.log("Bo qua Vision vi job dang xoa hoac da xoa:", jobId);
+
+      return {
+        skipped: true,
+        job_id: jobId,
+        reason: jobCheck.reason,
+      };
+    }
+
     throw new Error(`Khong the xu ly job Vision: ${jobCheck.reason}`);
   }
 
@@ -166,9 +176,12 @@ exports.handler = async (event) => {
 
     const result = await processVision(message);
 
-    console.log("Xu ly message Vision xong:", {
+    console.log("Ket qua xu ly message Vision:", {
       message_id: record.messageId,
-      job_id: result.output_key,
+      job_id: message.job_id,
+      skipped: result.skipped || false,
+      reason: result.reason || null,
+      output_key: result.output_key || null,
     });
   }
 

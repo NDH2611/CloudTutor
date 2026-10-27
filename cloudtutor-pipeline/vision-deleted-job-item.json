@@ -1,0 +1,14 @@
+{
+    "status":  {
+                   "S":  "DELETED"
+               },
+    "processing_version":  {
+                               "S":  "1"
+                           },
+    "job_id":  {
+                   "S":  "vision-deleted-test-ed04112811c04c4c88df42e7b67cfb72"
+               },
+    "owner_id":  {
+                     "S":  "test-user"
+                 }
+}
