@@ -1,0 +1,25 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "CreateFrameExtractionJob",
+                          "Resource":  [
+                                           "arn:aws:mediaconvert:ap-southeast-1:251929332061:queues/*",
+                                           "arn:aws:mediaconvert:ap-southeast-1:251929332061:jobTemplates/mediaconvert-cloudtutor-extract-frames"
+                                       ],
+                          "Action":  "mediaconvert:CreateJob"
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "PassFrameExtractionRole",
+                          "Resource":  "arn:aws:iam::251929332061:role/role-cloudtutor-extract-frames",
+                          "Condition":  {
+                                            "StringEquals":  {
+                                                                 "iam:PassedToService":  "mediaconvert.amazonaws.com"
+                                                             }
+                                        },
+                          "Action":  "iam:PassRole"
+                      }
+                  ]
+}

@@ -1,0 +1,24 @@
+{
+  "account_id": "251929332061",
+  "video_dlq_url": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-video-dlq",
+  "region": "ap-southeast-1",
+  "video_queue_url": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-video-processing",
+  "video_dlq_arn": "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-dlq",
+  "video_queue_arn": "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-video-processing",
+  "media_bucket": "s3-cloudtutor-media-251929332061",
+  "cognito": {
+    "user_pool_id": "ap-southeast-1_AuEE0yL01",
+    "client_id": "631udkqctdhiput7pl6h6gte3h"
+  },
+  "dynamodb": {
+    "jobs_table": "ddb-cloudtutor-jobs",
+    "results_table": "ddb-cloudtutor-results",
+    "jobs_gsi": ["owner-created-at-index", "share-token-hash-index"]
+  },
+  "lambda_api": {
+    "function": "lambda-cloudtutor-api",
+    "role": "role-cloudtutor-api",
+    "runtime": "nodejs24.x",
+    "handler": "src/router.handler"
+  }
+}

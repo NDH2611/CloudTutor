@@ -1,0 +1,40 @@
+{
+    "Settings":  {
+                     "Inputs":  [
+                                    {
+                                        "FileInput":  "s3://s3-cloudtutor-media-251929332061/videos/test-user/ocr-20261012-012043/source.mp4",
+                                        "VideoSelector":  {
+
+                                                          },
+                                        "TimecodeSource":  "ZEROBASED"
+                                    }
+                                ],
+                     "OutputGroups":  [
+                                          {
+                                              "OutputGroupSettings":  {
+                                                                          "FileGroupSettings":  {
+                                                                                                    "Destination":  "s3://s3-cloudtutor-media-251929332061/frames/test-user/ocr-20261012-012043/"
+                                                                                                },
+                                                                          "Type":  "FILE_GROUP_SETTINGS"
+                                                                      }
+                                          },
+                                          {
+                                              "OutputGroupSettings":  {
+                                                                          "FileGroupSettings":  {
+                                                                                                    "Destination":  "s3://s3-cloudtutor-media-251929332061/derived/test-user/ocr-20261012-012043/"
+                                                                                                },
+                                                                          "Type":  "FILE_GROUP_SETTINGS"
+                                                                      }
+                                          }
+                                      ]
+                 },
+    "UserMetadata":  {
+                         "frame_interval_seconds":  "5",
+                         "project":  "cloudtutor",
+                         "job_id":  "ocr-20261012-012043",
+                         "stage":  "extract-frames",
+                         "owner_id":  "test-user"
+                     },
+    "JobTemplate":  "mediaconvert-cloudtutor-extract-frames",
+    "Role":  "arn:aws:iam::251929332061:role/role-cloudtutor-extract-frames"
+}
