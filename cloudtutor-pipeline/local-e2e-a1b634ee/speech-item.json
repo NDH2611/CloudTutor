@@ -1,0 +1,20 @@
+{
+    "updated_at":  {
+                       "S":  "2026-10-28T04:03:02.3991963Z"
+                   },
+    "owner_id":  {
+                     "S":  "test-user"
+                 },
+    "test_fixture":  {
+                         "BOOL":  true
+                     },
+    "job_id":  {
+                   "S":  "e2e-speech-a1b634ee"
+               },
+    "video_key":  {
+                      "S":  "e2e-videos/test-user/e2e-speech-a1b634ee/source.mp4"
+                  },
+    "status":  {
+                   "S":  "UPLOADED"
+               }
+}

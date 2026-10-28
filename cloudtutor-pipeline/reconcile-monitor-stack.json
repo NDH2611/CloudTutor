@@ -1,0 +1,157 @@
+{
+    "Description":  "CloudTutor scheduled read-only stale job monitoring",
+    "AWSTemplateFormatVersion":  "2010-09-09",
+    "Resources":  {
+                      "ScheduleRole":  {
+                                           "Properties":  {
+                                                              "AssumeRolePolicyDocument":  {
+                                                                                               "Version":  "2012-10-17",
+                                                                                               "Statement":  [
+                                                                                                                 {
+                                                                                                                     "Effect":  "Allow",
+                                                                                                                     "Principal":  {
+                                                                                                                                       "Service":  "scheduler.amazonaws.com"
+                                                                                                                                   },
+                                                                                                                     "Condition":  {
+                                                                                                                                       "StringEquals":  {
+                                                                                                                                                            "aws:SourceAccount":  "251929332061"
+                                                                                                                                                        }
+                                                                                                                                   },
+                                                                                                                     "Action":  "sts:AssumeRole"
+                                                                                                                 }
+                                                                                                             ]
+                                                                                           },
+                                                              "Policies":  [
+                                                                               {
+                                                                                   "PolicyDocument":  {
+                                                                                                          "Version":  "2012-10-17",
+                                                                                                          "Statement":  [
+                                                                                                                            {
+                                                                                                                                "Effect":  "Allow",
+                                                                                                                                "Resource":  {
+                                                                                                                                                 "Fn::GetAtt":  [
+                                                                                                                                                                    "MonitorFunction",
+                                                                                                                                                                    "Arn"
+                                                                                                                                                                ]
+                                                                                                                                             },
+                                                                                                                                "Action":  "lambda:InvokeFunction"
+                                                                                                                            }
+                                                                                                                        ]
+                                                                                                      },
+                                                                                   "PolicyName":  "InvokeReconcileMonitor"
+                                                                               }
+                                                                           ]
+                                                          },
+                                           "Type":  "AWS::IAM::Role"
+                                       },
+                      "MonitorLogs":  {
+                                          "Properties":  {
+                                                             "LogGroupName":  "/aws/lambda/lambda-cloudtutor-reconcile-monitor",
+                                                             "RetentionInDays":  14
+                                                         },
+                                          "Type":  "AWS::Logs::LogGroup"
+                                      },
+                      "MonitorFunction":  {
+                                              "Properties":  {
+                                                                 "Handler":  "index.handler",
+                                                                 "FunctionName":  "lambda-cloudtutor-reconcile-monitor",
+                                                                 "Code":  {
+                                                                              "ZipFile":  "const {\r\n  DynamoDBClient,\r\n  ScanCommand,\r\n} = require(\"@aws-sdk/client-dynamodb\");\r\n\r\nconst region = process.env.AWS_REGION || \"ap-southeast-1\";\r\nconst tableName = process.env.JOBS_TABLE || \"ddb-cloudtutor-jobs\";\r\n\r\nconst dynamodb = new DynamoDBClient({ region });\r\n\r\nconst PROCESSING_STATES = new Set([\r\n  \"PROCESSING_ASR\",\r\n  \"PROCESSING_OCR\",\r\n  \"PROCESSING_VISION\",\r\n  \"PROCESSING_AI\",\r\n]);\r\n\r\nfunction getAgeMinutes(updatedAt, nowMs) {\r\n  const updatedMs = Date.parse(updatedAt);\r\n\r\n  if (!Number.isFinite(updatedMs)) {\r\n    return null;\r\n  }\r\n\r\n  return Math.floor((nowMs - updatedMs) / 60000);\r\n}\r\n\r\n/**\r\n * Phiên bản kiểm tra: chỉ đọc và báo các job quá hạn.\r\n * Không thay đổi DynamoDB, không tạo lại AWS job, không gửi SQS.\r\n */\r\nasync function findStaleJobs({\r\n  thresholdMinutes = 30,\r\n  includeTestFixtures = false,\r\n} = {}) {\r\n  if (!Number.isFinite(thresholdMinutes) || thresholdMinutes \u003c= 0) {\r\n    throw new Error(\"thresholdMinutes phai lon hon 0\");\r\n  }\r\n\r\n  const nowMs = Date.now();\r\n  const staleJobs = [];\r\n  const missingUpdatedAt = [];\r\n  let lastKey;\r\n  let scannedCount = 0;\r\n\r\n  do {\r\n    const response = await dynamodb.send(\r\n      new ScanCommand({\r\n        TableName: tableName,\r\n        ExclusiveStartKey: lastKey,\r\n\r\n        ProjectionExpression:\r\n          \"job_id, #owner, #status, updated_at, \" +\r\n          \"processing_version, transcription_job_name, \" +\r\n          \"ocr_mediaconvert_job_id, vision_mediaconvert_job_id, \" +\r\n          \"text_handoff_state, vision_handoff_state, test_fixture\",\r\n\r\n        ExpressionAttributeNames: {\r\n          \"#owner\": \"owner_id\",\r\n          \"#status\": \"status\",\r\n        },\r\n      })\r\n    );\r\n\r\n    scannedCount += response.ScannedCount || 0;\r\n\r\n    for (const item of response.Items || []) {\r\n      const status = item.status?.S;\r\n\r\n      if (!PROCESSING_STATES.has(status)) {\r\n        continue;\r\n      }\r\n\r\n      if (!includeTestFixtures \u0026\u0026 item.test_fixture?.BOOL === true) {\r\n        continue;\r\n      }\r\n\r\n      const ageMinutes = getAgeMinutes(item.updated_at?.S, nowMs);\r\n\r\n      const job = {\r\n        job_id: item.job_id?.S || null,\r\n        owner_id: item.owner_id?.S || null,\r\n        status,\r\n        processing_version: item.processing_version?.S || null,\r\n        updated_at: item.updated_at?.S || null,\r\n        age_minutes: ageMinutes,\r\n        transcription_job_name: item.transcription_job_name?.S || null,\r\n        ocr_mediaconvert_job_id:\r\n          item.ocr_mediaconvert_job_id?.S || null,\r\n        vision_mediaconvert_job_id:\r\n          item.vision_mediaconvert_job_id?.S || null,\r\n        text_handoff_state: item.text_handoff_state?.S || null,\r\n        vision_handoff_state: item.vision_handoff_state?.S || null,\r\n      };\r\n\r\n      if (ageMinutes === null) {\r\n        missingUpdatedAt.push(job);\r\n      } else if (ageMinutes \u003e= thresholdMinutes) {\r\n        staleJobs.push(job);\r\n      }\r\n    }\r\n\r\n    lastKey = response.LastEvaluatedKey;\r\n  } while (lastKey);\r\n\r\n  return {\r\n    mode: \"READ_ONLY\",\r\n    checked_at: new Date(nowMs).toISOString(),\r\n    threshold_minutes: thresholdMinutes,\r\n    include_test_fixtures: includeTestFixtures,\r\n    scanned_count: scannedCount,\r\n    stale_count: staleJobs.length,\r\n    missing_updated_at_count: missingUpdatedAt.length,\r\n    stale_jobs: staleJobs,\r\n    missing_updated_at: missingUpdatedAt,\r\n  };\r\n}\r\n\r\nexports.handler = async (event = {}) =\u003e {\r\n  const thresholdMinutes =\r\n    event.threshold_minutes === undefined\r\n      ? 30\r\n      : Number(event.threshold_minutes);\r\n\r\n  return findStaleJobs({\r\n    thresholdMinutes,\r\n    includeTestFixtures: event.include_test_fixtures === true,\r\n  });\r\n};\r\n\r\nif (require.main === module) {\r\n  const thresholdMinutes = Number(process.argv[2] || \"30\");\r\n  const includeTestFixtures = process.argv.includes(\"--include-test\");\r\n\r\n  findStaleJobs({\r\n    thresholdMinutes,\r\n    includeTestFixtures,\r\n  })\r\n    .then((result) =\u003e {\r\n      console.log(JSON.stringify(result, null, 2));\r\n    })\r\n    .catch((error) =\u003e {\r\n      console.error(\"Khong kiem tra duoc job:\", error.message);\r\n      process.exitCode = 1;\r\n    });\r\n}\r\n\r\nmodule.exports.findStaleJobs = findStaleJobs;\nconst originalScheduledHandler = exports.handler;\n\nexports.handler = async (event = {}) =\u003e {\n  const report = await originalScheduledHandler(event);\n\n  console.log(JSON.stringify({\n    event: \"RECONCILE_SUMMARY\",\n    mode: report.mode,\n    checked_at: report.checked_at,\n    threshold_minutes: report.threshold_minutes,\n    scanned_count: report.scanned_count,\n    stale_count: report.stale_count,\n    missing_updated_at_count: report.missing_updated_at_count,\n  }));\n\n  for (const job of report.stale_jobs) {\n    console.warn(JSON.stringify({\n      event: \"STALE_JOB\",\n      ...job,\n    }));\n  }\n\n  for (const job of report.missing_updated_at) {\n    console.warn(JSON.stringify({\n      event: \"JOB_MISSING_UPDATED_AT\",\n      ...job,\n    }));\n  }\n\n  return report;\n};"
+                                                                          },
+                                                                 "Role":  {
+                                                                              "Fn::GetAtt":  [
+                                                                                                 "MonitorRole",
+                                                                                                 "Arn"
+                                                                                             ]
+                                                                          },
+                                                                 "Layers":  [
+                                                                                "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"
+                                                                            ],
+                                                                 "Timeout":  120,
+                                                                 "MemorySize":  256,
+                                                                 "Runtime":  "nodejs22.x",
+                                                                 "Architectures":  [
+                                                                                       "x86_64"
+                                                                                   ],
+                                                                 "Environment":  {
+                                                                                     "Variables":  {
+                                                                                                       "JOBS_TABLE":  "ddb-cloudtutor-jobs"
+                                                                                                   }
+                                                                                 }
+                                                             },
+                                              "DependsOn":  "MonitorLogs",
+                                              "Type":  "AWS::Lambda::Function"
+                                          },
+                      "MonitorSchedule":  {
+                                              "Properties":  {
+                                                                 "Name":  "schedule-cloudtutor-reconcile-monitor",
+                                                                 "ScheduleExpression":  "rate(15 minutes)",
+                                                                 "Description":  "Read-only check every 15 minutes",
+                                                                 "State":  "ENABLED",
+                                                                 "FlexibleTimeWindow":  {
+                                                                                            "Mode":  "OFF"
+                                                                                        },
+                                                                 "Target":  {
+                                                                                "Input":  "{\"include_test_fixtures\":false,\"threshold_minutes\":30}",
+                                                                                "RoleArn":  {
+                                                                                                "Fn::GetAtt":  [
+                                                                                                                   "ScheduleRole",
+                                                                                                                   "Arn"
+                                                                                                               ]
+                                                                                            },
+                                                                                "RetryPolicy":  {
+                                                                                                    "MaximumEventAgeInSeconds":  900,
+                                                                                                    "MaximumRetryAttempts":  2
+                                                                                                },
+                                                                                "Arn":  {
+                                                                                            "Fn::GetAtt":  [
+                                                                                                               "MonitorFunction",
+                                                                                                               "Arn"
+                                                                                                           ]
+                                                                                        }
+                                                                            }
+                                                             },
+                                              "Type":  "AWS::Scheduler::Schedule"
+                                          },
+                      "MonitorRole":  {
+                                          "Properties":  {
+                                                             "AssumeRolePolicyDocument":  {
+                                                                                              "Version":  "2012-10-17",
+                                                                                              "Statement":  [
+                                                                                                                {
+                                                                                                                    "Effect":  "Allow",
+                                                                                                                    "Principal":  {
+                                                                                                                                      "Service":  "lambda.amazonaws.com"
+                                                                                                                                  },
+                                                                                                                    "Action":  "sts:AssumeRole"
+                                                                                                                }
+                                                                                                            ]
+                                                                                          },
+                                                             "Policies":  [
+                                                                              {
+                                                                                  "PolicyDocument":  {
+                                                                                                         "Version":  "2012-10-17",
+                                                                                                         "Statement":  [
+                                                                                                                           {
+                                                                                                                               "Effect":  "Allow",
+                                                                                                                               "Resource":  "arn:aws:dynamodb:ap-southeast-1:251929332061:table/ddb-cloudtutor-jobs",
+                                                                                                                               "Action":  "dynamodb:Scan"
+                                                                                                                           },
+                                                                                                                           {
+                                                                                                                               "Effect":  "Allow",
+                                                                                                                               "Resource":  "arn:aws:logs:ap-southeast-1:251929332061:log-group:/aws/lambda/lambda-cloudtutor-reconcile-monitor:*",
+                                                                                                                               "Action":  [
+                                                                                                                                              "logs:CreateLogStream",
+                                                                                                                                              "logs:PutLogEvents"
+                                                                                                                                          ]
+                                                                                                                           }
+                                                                                                                       ]
+                                                                                                     },
+                                                                                  "PolicyName":  "ReadJobsAndWriteLogs"
+                                                                              }
+                                                                          ]
+                                                         },
+                                          "Type":  "AWS::IAM::Role"
+                                      }
+                  }
+}

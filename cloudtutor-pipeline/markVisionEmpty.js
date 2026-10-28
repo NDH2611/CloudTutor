@@ -35,8 +35,10 @@ async function isVisionEmptyAlreadyRecorded({
     item.owner_id?.S === ownerId &&
     item.processing_version?.S === processingVersion &&
     item.status?.S === "FAILED" &&
-    item.error_code?.S === "VISION_NO_USEFUL_CONTENT"
-  );
+    [
+      "VISION_NO_USEFUL_SAMPLED_FRAMES",
+      "VISION_NO_USEFUL_CONTENT",
+    ].includes(item.error_code?.S)  );
 }
 
 /**
@@ -74,7 +76,7 @@ async function markVisionEmpty({
         ":version": { S: processingVersion },
         ":vision": { S: "PROCESSING_VISION" },
         ":failed": { S: "FAILED" },
-        ":error": { S: "VISION_NO_USEFUL_CONTENT" },
+	":error": { S: "VISION_NO_USEFUL_SAMPLED_FRAMES" },
         ":now": { S: new Date().toISOString() },
       },
     })

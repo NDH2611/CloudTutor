@@ -9,6 +9,12 @@ const {
   DetectTextCommand,
 } = require("@aws-sdk/client-rekognition");
 
+const {
+  DynamoDBClient,
+  GetItemCommand,
+  UpdateItemCommand,
+} = require("@aws-sdk/client-dynamodb");
+
 const { 
   publishTranscript 
 } = require("./publishTranscript");
@@ -51,7 +57,8 @@ function buildFrameText(lines) {
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const s3 = new S3Client({ region });
 const rekognition = new RekognitionClient({ region });
-
+const dynamodb = new DynamoDBClient({ region });
+const jobsTable = process.env.JOBS_TABLE || "ddb-cloudtutor-jobs";
 async function saveJson(bucket, key, value) {
   await s3.send(new PutObjectCommand({
     Bucket: bucket,
@@ -59,6 +66,115 @@ async function saveJson(bucket, key, value) {
     ContentType: "application/json",
     Body: JSON.stringify(value, null, 2),
   }));
+}
+
+/**
+ * Xử lý lỗi MediaConvert của đúng phiên OCR.
+ *
+ * Nếu Completion chưa kịp ghi MediaConvert ID, báo lỗi để có
+ * thể thử lại. Không tự đánh dấu FAILED khi chưa đối chiếu được.
+ */
+async function handleMediaConvertError({
+  jobId,
+  ownerId,
+  processingVersion,
+  mediaConvertJobId,
+  errorMessage,
+}) {
+  const response = await dynamodb.send(
+    new GetItemCommand({
+      TableName: jobsTable,
+      Key: {
+        job_id: { S: jobId },
+      },
+      ConsistentRead: true,
+    })
+  );
+
+  const job = response.Item;
+
+  if (!job) {
+    throw new Error("Khong tim thay job OCR trong DynamoDB");
+  }
+
+  if (
+    job.owner_id?.S !== ownerId ||
+    job.processing_version?.S !== processingVersion
+  ) {
+    throw new Error("Owner hoac processing version OCR khong khop");
+  }
+
+  const status = job.status?.S;
+
+  if (status === "DELETING" || status === "DELETED") {
+    return { skipped: true, reason: "JOB_DELETED" };
+  }
+
+  const storedMediaJobId = job.ocr_mediaconvert_job_id?.S;
+
+  if (!storedMediaJobId) {
+    throw new Error(
+      "Chua co ocr_mediaconvert_job_id de doi chieu event ERROR"
+    );
+  }
+
+  if (storedMediaJobId !== mediaConvertJobId) {
+    return { skipped: true, reason: "OTHER_MEDIACONVERT_JOB" };
+  }
+
+  if (
+    status === "FAILED" &&
+    job.error_code?.S === "MEDIACONVERT_FAILED"
+  ) {
+    return { skipped: true, reason: "ERROR_ALREADY_RECORDED" };
+  }
+
+  if (status !== "PROCESSING_OCR") {
+    return { skipped: true, reason: `JOB_ALREADY_${status}` };
+  }
+
+  await dynamodb.send(
+    new UpdateItemCommand({
+      TableName: jobsTable,
+
+      Key: {
+        job_id: { S: jobId },
+      },
+
+      ConditionExpression:
+        "#owner = :owner AND #version = :version " +
+        "AND #status = :ocr AND #mediaJob = :mediaJob",
+
+      UpdateExpression:
+        "SET #status = :failed, #error = :error, " +
+        "#message = :message, #updated = :now",
+
+      ExpressionAttributeNames: {
+        "#owner": "owner_id",
+        "#version": "processing_version",
+        "#status": "status",
+        "#mediaJob": "ocr_mediaconvert_job_id",
+        "#error": "error_code",
+        "#message": "error_message",
+        "#updated": "updated_at",
+      },
+
+      ExpressionAttributeValues: {
+        ":owner": { S: ownerId },
+        ":version": { S: processingVersion },
+        ":ocr": { S: "PROCESSING_OCR" },
+        ":mediaJob": { S: mediaConvertJobId },
+        ":failed": { S: "FAILED" },
+        ":error": { S: "MEDIACONVERT_FAILED" },
+        ":message": {
+          S: String(errorMessage || "MediaConvert failed").slice(0, 500),
+        },
+        ":now": { S: new Date().toISOString() },
+      },
+    })
+  );
+
+  return { skipped: false, reason: "MEDIACONVERT_FAILED" };
 }
 
 exports.handler = async (event) => {
@@ -85,17 +201,33 @@ exports.handler = async (event) => {
   const resultPrefix = `results/${ownerId}/${jobId}`;
 
   if (detail.status === "ERROR") {
-    await saveJson(bucket, `${resultPrefix}/ocr-failure.json`, {
-      job_id: jobId,
-      owner_id: ownerId,
-      mediaconvert_job_id: detail.jobId,
-      status: "FAILED",
-      error_code: detail.errorCode,
-      error_message: detail.errorMessage,
+    const processingVersion = metadata.processing_version;
+
+    if (
+      typeof processingVersion !== "string" ||
+      !processingVersion ||
+      typeof detail.jobId !== "string" ||
+      !detail.jobId
+    ) {
+      throw new Error("Event ERROR thieu processing_version hoac jobId");
+    }
+
+    const result = await handleMediaConvertError({
+      jobId,
+      ownerId,
+      processingVersion,
+      mediaConvertJobId: detail.jobId,
+      errorMessage: detail.errorMessage,
     });
 
-    // Làm Lambda báo lỗi để alarm Errors hiện có thể áp dụng.
-    throw new Error(`MediaConvert failed: ${detail.errorMessage}`);
+    console.error("MediaConvert ERROR:", {
+      job_id: jobId,
+      mediaconvert_job_id: detail.jobId,
+      error_code: detail.errorCode || null,
+      result,
+    });
+
+    return { statusCode: 200 };
   }
 
   if (detail.status !== "COMPLETE") return;
@@ -103,6 +235,61 @@ exports.handler = async (event) => {
 
   if (!processingVersion) {
     throw new Error("MediaConvert metadata thieu processing_version");
+  }
+
+  if (typeof detail.jobId !== "string" || !detail.jobId) {
+    throw new Error("MediaConvert event thieu jobId");
+  }
+
+  // Đối chiếu COMPLETE với MediaConvert job thuộc phiên hiện tại.
+  const jobResponse = await dynamodb.send(
+    new GetItemCommand({
+      TableName: jobsTable,
+      Key: {
+        job_id: { S: jobId },
+      },
+      ConsistentRead: true,
+    })
+  );
+
+  const currentJob = jobResponse.Item;
+
+  if (!currentJob) {
+    throw new Error("Khong tim thay job OCR trong DynamoDB");
+  }
+
+  if (
+    currentJob.owner_id?.S !== ownerId ||
+    currentJob.processing_version?.S !== processingVersion
+  ) {
+    throw new Error("Owner hoac processing version OCR khong khop");
+  }
+
+  if (
+    currentJob.status?.S === "DELETING" ||
+    currentJob.status?.S === "DELETED"
+  ) {
+    console.log("Bo qua COMPLETE vi job dang xoa hoac da xoa:", jobId);
+    return { statusCode: 200 };
+  }
+
+  const currentMediaJobId = currentJob.ocr_mediaconvert_job_id?.S;
+
+  if (!currentMediaJobId) {
+    // Completion có thể chưa kịp ghi ID. Không xử lý vội.
+    throw new Error(
+      "Chua co ocr_mediaconvert_job_id de doi chieu event COMPLETE"
+    );
+  }
+
+  if (currentMediaJobId !== detail.jobId) {
+    console.log("Bo qua COMPLETE cua MediaConvert job khac:", {
+      job_id: jobId,
+      event_media_job_id: detail.jobId,
+      current_media_job_id: currentMediaJobId,
+    });
+
+    return { statusCode: 200 };
   }
 
   const recovery = await recoverTextHandoff({

@@ -1,0 +1,16 @@
+{
+    "detail":  {
+                   "jobId":  "mediaconvert-old-fixture",
+                   "status":  "ERROR",
+                   "errorMessage":  "Old MediaConvert job failed",
+                   "userMetadata":  {
+                                        "owner_id":  "test-user",
+                                        "stage":  "extract-frames",
+                                        "processing_version":  "1",
+                                        "job_id":  "mediaconvert-wrong-id-test-2f59cd0a71444d689253bc07c44cdc38",
+                                        "frame_interval_seconds":  "5",
+                                        "project":  "cloudtutor"
+                                    },
+                   "errorCode":  9999
+               }
+}

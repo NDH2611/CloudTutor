@@ -160,6 +160,53 @@ async function markAsrFailed({
   );
 }
 
+/**
+ * Ghi MediaConvert job ID của phiên OCR hiện tại.
+ *
+ * Không ghi đè ID khác: nếu có hai lượt tạo job,
+ * cần kiểm tra thay vì nhận nhầm kết quả.
+ */
+async function recordMediaConvertJob({
+  jobId,
+  ownerId,
+  processingVersion,
+  mediaConvertJobId,
+}) {
+  await dynamodb.send(
+    new UpdateItemCommand({
+      TableName: jobsTable,
+
+      Key: {
+        job_id: { S: jobId },
+      },
+
+      ConditionExpression:
+        "#owner = :owner AND #version = :version " +
+        "AND #status = :ocr " +
+        "AND (attribute_not_exists(#mediaJob) OR #mediaJob = :mediaJob)",
+
+      UpdateExpression:
+        "SET #mediaJob = :mediaJob, #updated = :now",
+
+      ExpressionAttributeNames: {
+        "#owner": "owner_id",
+        "#version": "processing_version",
+        "#status": "status",
+        "#mediaJob": "ocr_mediaconvert_job_id",
+        "#updated": "updated_at",
+      },
+
+      ExpressionAttributeValues: {
+        ":owner": { S: ownerId },
+        ":version": { S: processingVersion },
+        ":ocr": { S: "PROCESSING_OCR" },
+        ":mediaJob": { S: mediaConvertJobId },
+        ":now": { S: new Date().toISOString() },
+      },
+    })
+  );
+}
+
 exports.handler = async (event) => {
   const jobName = event.detail?.TranscriptionJobName;
 
@@ -347,6 +394,13 @@ exports.handler = async (event) => {
       processingVersion,
     });
 
+    await recordMediaConvertJob({
+      jobId,
+      ownerId,
+      processingVersion,
+      mediaConvertJobId,
+    });
+    
     await saveJson(bucket, `${outputPrefix}/ocr-job.json`, {
       job_id: jobId,
       owner_id: ownerId,

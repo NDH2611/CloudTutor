@@ -229,6 +229,12 @@ async function main() {
 
   assert.equal(calls.markOcr.length, 1);
   assert.equal(calls.startOcr.length, 1);
+  assert.equal(calls.markFailed.length, 1);
+
+  assert.equal(
+    calls.markFailed[0].ExpressionAttributeValues[":mediaJob"].S,
+    "simulated-mediaconvert-job"
+  );
   assert.equal(calls.startOcr[0].processingVersion, "test-version");
   assert.equal(calls.stage.length, 0);
   assert.equal(calls.dispatch.length, 0);

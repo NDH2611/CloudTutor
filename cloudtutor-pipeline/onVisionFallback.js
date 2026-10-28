@@ -209,7 +209,7 @@ async function processVision(event) {
     return {
       skipped: true,
       job_id: jobId,
-      reason: "VISION_NO_USEFUL_CONTENT",
+reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
     };
   }
   // Kiểm tra checkpoint trước khi đọc frame hoặc gọi Gemini.
@@ -331,7 +331,7 @@ async function processVision(event) {
       return {
         skipped: true,
         job_id: jobId,
-        reason: "VISION_NO_USEFUL_CONTENT",
+        reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
       };
     }
     output = {
@@ -350,6 +350,7 @@ async function processVision(event) {
       warnings: [
         "AI_GENERATED_VISUAL_DESCRIPTION",
         "VISION_TIMESTAMPS_ARE_SAMPLED",
+        "VISION_CONTENT_FROM_SELECTED_FRAMES_ONLY",
       ],
     };
 
