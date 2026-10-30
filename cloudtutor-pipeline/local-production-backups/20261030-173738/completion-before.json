@@ -1,0 +1,8 @@
+{
+    "handler":  "ontranscribedone.handler",
+    "backup_zip":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-production-backups\\20261030-173738\\completion-before.zip",
+    "old_layers":  [
+                       null
+                   ],
+    "function_name":  "lambda-cloudtutor-transcription-completed"
+}

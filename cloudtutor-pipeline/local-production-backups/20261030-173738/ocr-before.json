@@ -1,0 +1,8 @@
+{
+    "handler":  "onFramesReady.handler",
+    "backup_zip":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-production-backups\\20261030-173738\\ocr-before.zip",
+    "old_layers":  [
+                       null
+                   ],
+    "function_name":  "lambda-cloudtutor-process-frames"
+}
