@@ -1,3 +1,4 @@
+const { fetchGeminiWithRetry } = require("./geminiRetry");
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
 /**
@@ -41,7 +42,7 @@ async function describeFrame(frameBytes) {
     "https://generativelanguage.googleapis.com/v1beta/models/" +
     `${MODEL}:generateContent`;
 
-  const response = await fetch(endpoint, {
+  const response = await fetchGeminiWithRetry(endpoint, {
     method: "POST",
 
     headers: {
@@ -72,7 +73,7 @@ async function describeFrame(frameBytes) {
       },
     }),
 
-    signal: AbortSignal.timeout(90000),
+    // Timeout va retry duoc quan ly trong geminiRetry.
   });
 
   // Không ghi API key, header hoặc toàn bộ request vào log.
