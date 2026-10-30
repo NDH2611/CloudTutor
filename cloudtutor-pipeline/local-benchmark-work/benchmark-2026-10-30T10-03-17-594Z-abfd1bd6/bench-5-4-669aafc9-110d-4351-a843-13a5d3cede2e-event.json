@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "messageId": "bench-5-4-669aafc9-110d-4351-a843-13a5d3cede2e",
+      "eventSource": "aws:sqs",
+      "body": "{\"Records\":[{\"eventSource\":\"aws:s3\",\"eventName\":\"ObjectCreated:Put\",\"s3\":{\"bucket\":{\"name\":\"s3-cloudtutor-media-251929332061\"},\"object\":{\"key\":\"e2e-videos/test-user/bench-5-4-669aafc9-110d-4351-a843-13a5d3cede2e/source.mp4\"}}}]}"
+    }
+  ]
+}
