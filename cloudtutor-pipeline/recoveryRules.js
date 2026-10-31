@@ -8,7 +8,14 @@ function fail(code) {
 
 function eligible(job, { now = Date.now(), testJobId = null } = {}) {
   if (!job) return "MISSING_JOB";
-  if (!["PROCESSING_ASR", "PROCESSING_OCR", "PROCESSING_AI"].includes(job.status)) {
+  // VISION_QUOTA_RECOVERY_V1
+  if (job.status === "PROCESSING_VISION") {
+    if (job.vision_retry_state !== "WAITING") return "STATUS_NOT_RECOVERABLE";
+    if (job.vision_retry_version !== job.processing_version) return "INVALID_IDENTITY";
+    if (!Number.isFinite(job.next_retry_at)) return "MISSING_UPDATED_AT";
+    if (job.next_retry_at * 1000 > now) return "VISION_RETRY_NOT_DUE";
+  }
+  if (!["PROCESSING_ASR", "PROCESSING_OCR", "PROCESSING_AI", "PROCESSING_VISION"].includes(job.status)) {
     return "STATUS_NOT_RECOVERABLE";
   }
   for (const field of ["job_id", "owner_id", "processing_version"]) {

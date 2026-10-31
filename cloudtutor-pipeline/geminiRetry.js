@@ -1,107 +1,98 @@
+"use strict";
+const { VisionError } = require("./visionErrors");
+const { metric } = require("./visionMetrics");
 const RETRYABLE = new Set([408, 429, 500, 502, 503, 504]);
 
-function retryAfterMs(response, now) {
-  const value = response.headers?.get("retry-after");
-  if (!value) return 0;
-
-  const seconds = Number(value);
-  if (Number.isFinite(seconds) && seconds >= 0) {
-    return seconds * 1000;
+function errorInfo(payload, header, now) {
+  let seconds = 0;
+  if (header) {
+    const numeric = Number(header);
+    seconds = Number.isFinite(numeric) && numeric >= 0
+      ? numeric : Math.max(0, (Date.parse(header) - now) / 1000) || 0;
   }
-
-  const date = Date.parse(value);
-  return Number.isFinite(date) ? Math.max(0, date - now) : 0;
+  let daily = false;
+  for (const detail of payload?.error?.details || []) {
+    if (String(detail["@type"]).endsWith("google.rpc.RetryInfo")) {
+      const match = /^(\d+(?:\.\d+)?)s$/.exec(detail.retryDelay || "");
+      if (match) seconds = Math.max(seconds, Number(match[1]));
+    }
+    if (String(detail["@type"]).endsWith("google.rpc.QuotaFailure")) {
+      for (const violation of detail.violations || []) {
+        if (/perday|per_day|daily/i.test(
+          `${violation.quotaId || ""} ${violation.quotaMetric || ""}`
+        )) daily = true;
+      }
+    }
+  }
+  return { daily, seconds: Math.ceil(seconds) };
 }
 
-function safeError(code, status) {
-  const error = new Error(code);
-  error.code = code;
-  if (status !== undefined) error.status = status;
-  return error;
+async function readError(response) {
+  // Google error body chỉ được phân tích trong bộ nhớ, không log.
+  if (!response.body?.getReader) {
+    try { return await response.json(); } catch { return {}; }
+  }
+  const reader = response.body.getReader();
+  const chunks = []; let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.length;
+      if (length > 65536) { await reader.cancel(); return {}; }
+      chunks.push(Buffer.from(value));
+    }
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch { return {}; }
+  finally { reader.releaseLock(); }
 }
 
 async function fetchGeminiWithRetry(url, options, dependencies = {}) {
   const fetchImpl = dependencies.fetchImpl || globalThis.fetch;
-  const sleep = dependencies.sleep ||
-    (ms => new Promise(resolve => setTimeout(resolve, ms)));
+  const sleep = dependencies.sleep || (ms => new Promise(resolve => setTimeout(resolve, ms)));
   const random = dependencies.random || Math.random;
   const now = dependencies.now || Date.now;
-
   const deadline = now() + 70000;
-
   for (let attempt = 1; attempt <= 3; attempt++) {
     const remaining = deadline - now();
-
-    if (remaining <= 0) {
-      throw safeError("GEMINI_RETRY_BUDGET_EXHAUSTED");
-    }
-
+    if (remaining <= 0) throw new VisionError("GEMINI_RETRY_BUDGET_EXHAUSTED", { retryable: true });
     let response;
-    let networkFailure = false;
-
+    const started = now();
+    metric("GeminiRequests");
     try {
-      response = await fetchImpl(url, {
-        ...options,
-        signal: AbortSignal.timeout(
-          Math.max(1, Math.min(20000, Math.floor(remaining)))
-        ),
+      response = await fetchImpl(url, { ...options,
+        signal: AbortSignal.timeout(Math.max(1, Math.min(20000, Math.floor(remaining)))),
       });
     } catch (error) {
-      if (!["TypeError", "TimeoutError", "AbortError"]
-        .includes(error.name)) {
-        throw error;
+      if (!["TypeError", "TimeoutError", "AbortError"].includes(error.name)) {
+        throw new VisionError("GEMINI_TRANSPORT_ERROR", { retryable: true });
       }
-
-      networkFailure = true;
     }
-
-    // Lỗi cố định như 400/401/403 được trả về cho caller xử lý.
-    if (response && !RETRYABLE.has(response.status)) {
-      return response;
-    }
-
+    metric("GeminiLatencyMs", Math.max(0, now() - started));
+    if (response && !RETRYABLE.has(response.status)) return response;
     const status = response?.status;
-    const requestedWait = response
-      ? retryAfterMs(response, now())
-      : 0;
-
-    // Giải phóng body của response sẽ không sử dụng.
-    if (response?.body) {
-      try {
-        await response.body.cancel();
-      } catch {
-        // Không thay lỗi chính bằng lỗi giải phóng response.
-      }
+    if (status === 429) metric("Gemini429");
+    if (status >= 500) metric("Gemini5xx");
+    const info = response
+      ? errorInfo(await readError(response), response.headers?.get("retry-after"), now())
+      : { daily: false, seconds: 0 };
+    if (info.daily) {
+      metric("DailyQuota");
+      // Kiểm tra lại sau 6h, không tuyên bố đây là thời điểm quota reset.
+      throw new VisionError("GEMINI_DAILY_QUOTA", {
+        retryable: true, status, daily: true,
+        retrySeconds: Math.max(21600, info.seconds),
+      });
     }
-
-    if (attempt === 3) {
-      throw safeError(
-        networkFailure
-          ? "GEMINI_NETWORK_RETRIES_EXHAUSTED"
-          : "GEMINI_HTTP_RETRIES_EXHAUSTED",
-        status
-      );
+    const wait = Math.max(1000 * 2 ** (attempt - 1) + Math.floor(random() * 500), info.seconds * 1000);
+    if (attempt === 3 || wait > 5000 || wait + 1000 >= deadline - now()) {
+      throw new VisionError(status === 429 ? "GEMINI_RATE_LIMITED" : "GEMINI_TEMPORARY_FAILURE", {
+        retryable: true, status,
+        retrySeconds: Math.max(status === 429 ? 900 : 120, info.seconds),
+      });
     }
-
-    const backoff = 1000 * (2 ** (attempt - 1))
-      + Math.floor(random() * 500);
-    const delay = Math.max(backoff, requestedWait);
-
-    // Để SQS retry ở lượt sau nếu server yêu cầu chờ dài.
-    if (delay > 5000 || delay + 1000 >= deadline - now()) {
-      throw safeError("GEMINI_RETRY_DEFERRED_TO_QUEUE", status);
-    }
-
-    // Không log URL, API key, request body hoặc mô tả frame.
-    console.warn(JSON.stringify({
-      event: "GEMINI_RETRY",
-      attempt,
-      status: status || "NETWORK_ERROR",
-      delay_ms: delay,
-    }));
-
-    await sleep(delay);
+    metric("GeminiRetries");
+    await sleep(wait);
   }
 }
-
-module.exports = { fetchGeminiWithRetry };
+module.exports = { fetchGeminiWithRetry, errorInfo };

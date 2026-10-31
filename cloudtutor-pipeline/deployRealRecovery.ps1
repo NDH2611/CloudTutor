@@ -142,6 +142,7 @@ param([switch]$RunOcrFixtureTest)
                                 @{ Effect = "Allow"; Action = "transcribe:GetTranscriptionJob"; Resource = "arn:aws:transcribe:ap-southeast-1:251929332061:transcription-job/transcribe-cloudtutor-*" }
                                 @{ Effect = "Allow"; Action = "mediaconvert:GetJob"; Resource = "arn:aws:mediaconvert:ap-southeast-1:251929332061:jobs/*" }
                                 @{ Effect = "Allow"; Action = "s3:ListBucket"; Resource = "arn:aws:s3:::$CtBucket"; Condition = @{ StringLike = @{ "s3:prefix" = "derived/*" } } }
+                                @{ Effect = "Allow"; Action = "s3:GetObject"; Resource = "arn:aws:s3:::${CtBucket}/results/*" }
                                 @{ Effect = "Allow"; Action = "lambda:InvokeFunction"; Resource = @(
                                     "arn:aws:lambda:ap-southeast-1:251929332061:function:lambda-cloudtutor-transcription-completed"
                                     "arn:aws:lambda:ap-southeast-1:251929332061:function:lambda-cloudtutor-process-frames"

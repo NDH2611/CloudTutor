@@ -3,7 +3,7 @@ const { randomUUID } = require("node:crypto");
 const { DynamoDBClient, ScanCommand, GetItemCommand, UpdateItemCommand } = require("@aws-sdk/client-dynamodb");
 const { TranscribeClient, GetTranscriptionJobCommand } = require("@aws-sdk/client-transcribe");
 const { MediaConvertClient, GetJobCommand } = require("@aws-sdk/client-mediaconvert");
-const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
+const { S3Client, ListObjectsV2Command, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const rules = require("./recoveryRules");
 
@@ -36,7 +36,7 @@ async function plan(job) {
     checkpoint = rules.pendingSource(job, await read("ddb-cloudtutor-results", job.job_id));
     if (checkpoint.action === "SKIP_SENT") return checkpoint;
   }
-  const source = checkpoint?.source || (job.status === "PROCESSING_ASR" ? "ASR" : "OCR");
+  const source = checkpoint?.source || (job.status === "PROCESSING_ASR" ? "ASR" : job.status === "PROCESSING_VISION" ? "VISION" : "OCR");
   let event;
   if (source === "ASR") {
     if (!job.transcription_job_name) throw Object.assign(new Error(), { code: "REVIEW_MISSING_ASR_ID" });
@@ -60,10 +60,27 @@ async function plan(job) {
     event = rules.mediaEvent(job, service, bucket, files, Boolean(checkpoint));
   } else {
     // Handler Vision khôi phục checkpoint trước bước chọn frame/gọi Gemini.
+    let extra = {};
+    if (job.status === "PROCESSING_VISION") {
+      const saved = await s3.send(new GetObjectCommand({ Bucket: bucket,
+        Key: `results/${job.owner_id}/${job.job_id}/normalized-ocr.json` }));
+      if (saved.ContentLength > 4 * 1024 * 1024) throw Object.assign(new Error(), { code: "REVIEW_OCR_CHECKPOINT_TOO_LARGE" });
+      const text = await saved.Body.transformToString("utf8");
+      if (Buffer.byteLength(text) > 4 * 1024 * 1024) throw Object.assign(new Error(), { code: "REVIEW_OCR_CHECKPOINT_TOO_LARGE" });
+      const normalized = JSON.parse(text);
+      if (normalized.job_id !== job.job_id || normalized.owner_id !== job.owner_id ||
+          normalized.processing_version !== job.processing_version || normalized.source !== "OCR" ||
+          !Number.isFinite(normalized.duration_seconds) || normalized.duration_seconds <= 0 ||
+          !Number.isFinite(normalized.frame_interval_seconds) || normalized.frame_interval_seconds <= 0) {
+        throw Object.assign(new Error(), { code: "REVIEW_OCR_CHECKPOINT_MISMATCH" });
+      }
+      extra = { duration_seconds: normalized.duration_seconds,
+        frame_interval_seconds: normalized.frame_interval_seconds };
+    }
     event = { Records: [{
       messageId: `reconcile-${randomUUID()}`, eventSource: "aws:sqs",
       body: JSON.stringify({ owner_id: job.owner_id, job_id: job.job_id,
-        processing_version: job.processing_version }),
+        processing_version: job.processing_version, ...extra }),
     }] };
   }
   return {
@@ -135,10 +152,10 @@ exports.handler = async (event = {}, context) => {
       const page = await db.send(new ScanCommand({
         TableName: jobsTable, ExclusiveStartKey: lastKey, Limit: 100,
         ProjectionExpression: "job_id",
-        FilterExpression: "#s IN (:asr, :ocr, :ai) AND (attribute_not_exists(test_fixture) OR test_fixture <> :yes)",
+        FilterExpression: "#s IN (:asr, :ocr, :ai, :vision) AND (attribute_not_exists(test_fixture) OR test_fixture <> :yes)",
         ExpressionAttributeNames: { "#s": "status" },
         ExpressionAttributeValues: { ":asr": { S: "PROCESSING_ASR" }, ":ocr": { S: "PROCESSING_OCR" },
-          ":ai": { S: "PROCESSING_AI" }, ":yes": { BOOL: true } },
+          ":ai": { S: "PROCESSING_AI" }, ":vision": { S: "PROCESSING_VISION" }, ":yes": { BOOL: true } },
       }));
       candidates.push(...(page.Items || []).map(plain));
       scanned += page.ScannedCount || 0;

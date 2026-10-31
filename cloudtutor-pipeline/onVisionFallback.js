@@ -1,3 +1,5 @@
+// VISION_HARDENING_V1
+const { runVisionRecord } = require("./visionRuntime");
 const {
   S3Client,
   GetObjectCommand,
@@ -303,7 +305,7 @@ reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
       console.log("Dang xu ly frame:", frame.key);
 
       const imageBytes = await readFrame(frame.key);
-      const result = await describeFrame(imageBytes);
+      const result = await describeFrame(imageBytes, { ...identity, frameKey: frame.key });
 
       usage.push({
         frame_key: frame.key,
@@ -336,11 +338,12 @@ reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
     }
     output = {
       schema_version: "1.0",
-      test: "VISION_CACHE_TEST",
       job_id: jobId,
       owner_id: ownerId,
       processing_version: processingVersion,
       source: "VISION",
+      model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
+      prompt_version: process.env.GEMINI_PROMPT_VERSION || "vision-v2",
       text: segments.map((segment) => segment.text).join("\n\n"),
       segments,
       selected_frame_count: frames.length,
@@ -396,6 +399,12 @@ reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
 }
 
 exports.handler = async (event) => {
+  if (event?.test === "VISION_SECRET_HEALTH_CHECK") {
+    return require("./visionDiagnostics").secretHealth();
+  }
+  if (event?.test === "VISION_FRAME_CACHE_CHECK") {
+    return require("./visionDiagnostics").frameCacheCheck(event);
+  }
   if (!Array.isArray(event?.Records) || event.Records.length === 0) {
     throw new Error("Event khong co SQS Records");
   }
@@ -413,7 +422,7 @@ exports.handler = async (event) => {
       throw new Error("SQS message body khong phai JSON hop le");
     }
 
-    const result = await processVision(message);
+    const result = await runVisionRecord({ record, message }, () => processVision(message));
 
     console.log("Ket qua xu ly message Vision:", {
       message_id: record.messageId,
