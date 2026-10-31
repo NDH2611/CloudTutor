@@ -1,0 +1,18 @@
+{
+    "frames":  [
+                   {
+                       "key":  "frames/test-user/ocr-auto-20261016-150459/source_frame.0000000.jpg",
+                       "index":  0
+                   },
+                   {
+                       "key":  "frames/test-user/ocr-auto-20261016-150459/source_frame.0000003.jpg",
+                       "index":  3
+                   },
+                   {
+                       "key":  "frames/test-user/ocr-auto-20261016-150459/source_frame.0000006.jpg",
+                       "index":  6
+                   }
+               ],
+    "duration_seconds":  30.04,
+    "frame_interval_seconds":  5
+}

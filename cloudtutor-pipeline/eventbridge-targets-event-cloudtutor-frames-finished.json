@@ -1,0 +1,1 @@
+[{"Id":"ocr","Arn":"arn:aws:lambda:ap-southeast-1:251929332061:function:lambda-cloudtutor-process-frames","DeadLetterConfig":{"Arn":"arn:aws:sqs:ap-southeast-1:251929332061:cloudtutor-m2-failure-monitoring-EventDeliveryDLQ-MpLLMY3R8VRT"}}]

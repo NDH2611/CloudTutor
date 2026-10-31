@@ -8,6 +8,11 @@ const {
   PutObjectCommand,
 } = require("@aws-sdk/client-s3");
 
+const {
+  DynamoDBClient,
+  UpdateItemCommand,
+} = require("@aws-sdk/client-dynamodb");
+
 const { 
   publishTranscript 
 } = require("./publishTranscript");
@@ -16,9 +21,21 @@ const {
   startOcrFallback 
 } = require("./startOcrFallback");
 
+const {
+  getAsrJobState,
+  markProcessingOcr,
+} = require("./asrJobState");
+
+const { stageTextResult } = require("./stageTextResult");
+const { dispatchTextHandoff } = require("./dispatchTextHandoff");
+const { recoverTextHandoff } = require("./recoverTextHandoff");
+
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const transcribeClient = new TranscribeClient({ region });
 const s3Client = new S3Client({ region });
+
+const dynamodb = new DynamoDBClient({ region });
+const jobsTable = process.env.JOBS_TABLE || "ddb-cloudtutor-jobs";
 
 async function fetchJson(url) {
   const response = await fetch(url, {
@@ -96,6 +113,100 @@ async function saveJson(bucket, key, value) {
   }));
 }
 
+/**
+ * Chỉ ghi FAILED khi job vẫn thuộc phiên ASR hiện tại.
+ * Nếu job đã chuyển bước hoặc bị xóa, điều kiện sẽ không cho ghi đè.
+ */
+async function markAsrFailed({
+  jobId,
+  ownerId,
+  processingVersion,
+  transcriptionJobName,
+}) {
+  await dynamodb.send(
+    new UpdateItemCommand({
+      TableName: jobsTable,
+
+      Key: {
+        job_id: { S: jobId },
+      },
+
+      ConditionExpression:
+        "#owner = :owner AND #version = :version " +
+        "AND #transcribe = :transcribe AND #status = :asr",
+
+      UpdateExpression:
+        "SET #status = :failed, #error = :error, #updated = :now",
+
+      ExpressionAttributeNames: {
+        "#owner": "owner_id",
+        "#version": "processing_version",
+        "#transcribe": "transcription_job_name",
+        "#status": "status",
+        "#error": "error_code",
+        "#updated": "updated_at",
+      },
+
+      ExpressionAttributeValues: {
+        ":owner": { S: ownerId },
+        ":version": { S: processingVersion },
+        ":transcribe": { S: transcriptionJobName },
+        ":asr": { S: "PROCESSING_ASR" },
+        ":failed": { S: "FAILED" },
+        ":error": { S: "ASR_SERVICE_FAILED" },
+        ":now": { S: new Date().toISOString() },
+      },
+    })
+  );
+}
+
+/**
+ * Ghi MediaConvert job ID của phiên OCR hiện tại.
+ *
+ * Không ghi đè ID khác: nếu có hai lượt tạo job,
+ * cần kiểm tra thay vì nhận nhầm kết quả.
+ */
+async function recordMediaConvertJob({
+  jobId,
+  ownerId,
+  processingVersion,
+  mediaConvertJobId,
+}) {
+  await dynamodb.send(
+    new UpdateItemCommand({
+      TableName: jobsTable,
+
+      Key: {
+        job_id: { S: jobId },
+      },
+
+      ConditionExpression:
+        "#owner = :owner AND #version = :version " +
+        "AND #status = :ocr " +
+        "AND (attribute_not_exists(#mediaJob) OR #mediaJob = :mediaJob)",
+
+      UpdateExpression:
+        "SET #mediaJob = :mediaJob, #updated = :now",
+
+      ExpressionAttributeNames: {
+        "#owner": "owner_id",
+        "#version": "processing_version",
+        "#status": "status",
+        "#mediaJob": "ocr_mediaconvert_job_id",
+        "#updated": "updated_at",
+      },
+
+      ExpressionAttributeValues: {
+        ":owner": { S: ownerId },
+        ":version": { S: processingVersion },
+        ":ocr": { S: "PROCESSING_OCR" },
+        ":mediaJob": { S: mediaConvertJobId },
+        ":now": { S: new Date().toISOString() },
+      },
+    })
+  );
+}
+
 exports.handler = async (event) => {
   const jobName = event.detail?.TranscriptionJobName;
 
@@ -131,14 +242,42 @@ exports.handler = async (event) => {
   const parts = mediaUri.slice(prefix.length).split("/");
   const [folder, ownerId, jobId] = parts;
 
-  if (parts.length !== 4 ||
-      folder !== "videos" ||
-      !ownerId ||
-      !jobId ||
-      jobName !== `transcribe-cloudtutor-${jobId}`) {
+  if (
+    parts.length !== 4 ||
+    folder !== "videos" ||
+    !ownerId ||
+    !jobId
+  ) {
     throw new Error("Video key hoac job_id khong hop le");
   }
 
+  const videoKey = mediaUri.slice(prefix.length);
+
+  const asrState = await getAsrJobState({
+    jobId,
+    ownerId,
+    videoKey,
+    transcriptionJobName: jobName,
+  });
+
+  if (asrState.skipped) {
+    console.log("Bo qua Transcribe event:", asrState.reason);
+    return;
+  }
+
+  const processingVersion = asrState.processingVersion;
+    const recovery = await recoverTextHandoff({
+    jobId,
+    ownerId,
+    processingVersion,
+    bucket,
+    source: "ASR",
+  });
+
+  if (recovery.action !== "PROCESS") {
+    console.log("Bo qua hoac khoi phuc ASR:", recovery);
+    return { statusCode: 200 };
+  }
   const outputPrefix = `results/${ownerId}/${jobId}`;
 
   if (job.TranscriptionJobStatus === "FAILED") {
@@ -150,8 +289,15 @@ exports.handler = async (event) => {
       failure_reason: job.FailureReason || "Unknown",
     });
 
+    await markAsrFailed({
+      jobId,
+      ownerId,
+      processingVersion,
+      transcriptionJobName: jobName,
+    });
+
     console.error("Transcribe that bai:", jobName, job.FailureReason);
-    // Cảnh báo lỗi dịch vụ và cập nhật DynamoDB sẽ bổ sung sau.
+
     return { statusCode: 200 };
   }
 
@@ -180,6 +326,7 @@ exports.handler = async (event) => {
     schema_version: "1.0",
     job_id: jobId,
     owner_id: ownerId,
+    processing_version: processingVersion,
     transcription_job_name: jobName,
     source: "ASR",
     text,
@@ -199,23 +346,61 @@ exports.handler = async (event) => {
   console.log("So doan:", segments.length, "Can OCR:", normalized.needs_ocr);
 
   if (!normalized.needs_ocr) {
-    await publishTranscript({
-      bucket,
-      key: `${outputPrefix}/normalized-transcript.json`,
+    if (asrState.status !== "PROCESSING_ASR") {
+      throw new Error("ASR co chu nhung job khong o PROCESSING_ASR");
+    }
+
+    const transcriptKey =
+      `${outputPrefix}/normalized-transcript.json`;
+
+    await stageTextResult({
       jobId,
       ownerId,
+      processingVersion,
+      transcriptKey,
       source: "ASR",
     });
+
+    await dispatchTextHandoff({
+      jobId,
+      ownerId,
+      processingVersion,
+      bucket,
+      source: "ASR",
+    });
+
+    console.log("Da ban giao transcript ASR:", jobId);
   } else {
     console.log("ASR rong: bat dau OCR fallback");
 
-    const mediaConvertJobId = await startOcrFallback({
-      bucket,
-      videoKey: mediaUri.slice(prefix.length),
-      ownerId,
+    const ocrState = await markProcessingOcr({
       jobId,
+      ownerId,
+      videoKey,
+      transcriptionJobName: jobName,
+      processingVersion,
     });
 
+    if (ocrState.skipped) {
+      console.log("Bo qua OCR:", ocrState.reason);
+      return;
+    }
+
+    const mediaConvertJobId = await startOcrFallback({
+      bucket,
+      videoKey,
+      ownerId,
+      jobId,
+      processingVersion,
+    });
+
+    await recordMediaConvertJob({
+      jobId,
+      ownerId,
+      processingVersion,
+      mediaConvertJobId,
+    });
+    
     await saveJson(bucket, `${outputPrefix}/ocr-job.json`, {
       job_id: jobId,
       owner_id: ownerId,

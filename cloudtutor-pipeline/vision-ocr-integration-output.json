@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "test": "VISION_CACHE_TEST",
+  "job_id": "ocr-empty-test-26ee943305a34608b889ca4e5fba6849",
+  "owner_id": "test-user",
+  "processing_version": "1",
+  "source": "VISION",
+  "text": "Ảnh hoàn toàn là một màn hình màu đen, không có nội dung trực quan nào hiển thị. Do đó, hình ảnh này không cung cấp thông tin hữu ích nào để mô tả.",
+  "segments": [
+    {
+      "start_time": 0,
+      "end_time": 5,
+      "text": "Ảnh hoàn toàn là một màn hình màu đen, không có nội dung trực quan nào hiển thị. Do đó, hình ảnh này không cung cấp thông tin hữu ích nào để mô tả.",
+      "source": "VISION",
+      "frame_key": "frames/test-user/ocr-empty-test-26ee943305a34608b889ca4e5fba6849/source_frame.0000000.jpg"
+    }
+  ],
+  "selected_frame_count": 1,
+  "frame_interval_seconds": 5,
+  "duration_seconds": 30.04,
+  "usage": [
+    {
+      "frame_key": "frames/test-user/ocr-empty-test-26ee943305a34608b889ca4e5fba6849/source_frame.0000000.jpg",
+      "usage": {
+        "promptTokenCount": 1176,
+        "candidatesTokenCount": 38,
+        "totalTokenCount": 1214,
+        "promptTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1100
+          },
+          {
+            "modality": "TEXT",
+            "tokenCount": 76
+          }
+        ],
+        "serviceTier": "standard"
+      }
+    }
+  ],
+  "warnings": [
+    "AI_GENERATED_VISUAL_DESCRIPTION",
+    "VISION_TIMESTAMPS_ARE_SAMPLED"
+  ]
+}

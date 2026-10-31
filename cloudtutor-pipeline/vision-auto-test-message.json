@@ -1,0 +1,8 @@
+{
+    "schema_version":  "1.0",
+    "owner_id":  "test-user",
+    "job_id":  "vision-auto-test-147cf8db61f544c1a45dd99919630a71",
+    "processing_version":  "1",
+    "duration_seconds":  30.04,
+    "frame_interval_seconds":  5
+}

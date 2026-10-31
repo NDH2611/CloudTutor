@@ -1,0 +1,21 @@
+{
+    "run_id":  "a1b634ee",
+    "ocr_function":  "lambda-cloudtutor-test-ocr-c6491b01",
+    "completion_function":  "lambda-cloudtutor-test-completion-c6491b01",
+    "owner_id":  "test-user",
+    "bucket":  "s3-cloudtutor-media-251929332061",
+    "cases":  [
+                  {
+                      "name":  "speech",
+                      "job_id":  "e2e-speech-a1b634ee",
+                      "file":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-e2e-a1b634ee\\speech.mp4"
+                  },
+                  {
+                      "name":  "silent",
+                      "job_id":  "e2e-silent-a1b634ee",
+                      "file":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-e2e-a1b634ee\\silent.mp4"
+                  }
+              ],
+    "worker_function":  "lambda-cloudtutor-test-worker-c6491b01",
+    "directory":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-e2e-a1b634ee"
+}

@@ -1,0 +1,23 @@
+{
+    "source":  "VISION",
+    "schema_version":  "1.0",
+    "text":  "Noi dung Vision mau de thu khoi phuc.",
+    "warnings":  [
+                     "AI_GENERATED_VISUAL_DESCRIPTION",
+                     "VISION_TIMESTAMPS_ARE_SAMPLED"
+                 ],
+    "owner_id":  "test-user",
+    "job_id":  "vision-cache-test-da62f0d599dd4990b9907c8bdc3d469a",
+    "duration_seconds":  30.04,
+    "segments":  [
+                     {
+                         "end_time":  5,
+                         "source":  "VISION",
+                         "text":  "Noi dung Vision mau de thu khoi phuc.",
+                         "start_time":  0
+                     }
+                 ],
+    "processing_version":  "1",
+    "frame_interval_seconds":  5,
+    "selected_frame_count":  1
+}

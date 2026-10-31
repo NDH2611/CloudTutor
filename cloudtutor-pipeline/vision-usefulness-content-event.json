@@ -1,0 +1,9 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"schema_version\":\"1.0\",\"owner_id\":\"test-user\",\"job_id\":\"vision-content-test-7cb7e5e0457e45dd946d3df2b843209b\",\"processing_version\":\"1\",\"duration_seconds\":30.04,\"frame_interval_seconds\":5}",
+                        "messageId":  "vision-usefulness-content-001",
+                        "eventSource":  "aws:sqs"
+                    }
+                ]
+}

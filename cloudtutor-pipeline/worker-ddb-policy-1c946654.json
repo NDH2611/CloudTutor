@@ -1,0 +1,22 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Resource":  [
+                                           "arn:aws:dynamodb:ap-southeast-1:251929332061:table/ddb-cloudtutor-jobs"
+                                       ],
+                          "Action":  [
+                                         "dynamodb:GetItem",
+                                         "dynamodb:UpdateItem"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Resource":  "*",
+                          "Action":  [
+                                         "transcribe:GetTranscriptionJob"
+                                     ]
+                      }
+                  ]
+}

@@ -1,0 +1,10 @@
+{
+  "TextDetections": [],
+  "TextModelVersion": "3.0",
+  "$metadata": {
+    "httpStatusCode": 200,
+    "requestId": "ab6c6a69-c46a-4fa7-839a-961592b72ed0",
+    "attempts": 1,
+    "totalRetryDelay": 0
+  }
+}

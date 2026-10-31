@@ -1,0 +1,17 @@
+{
+    "test_fixture":  {
+                         "BOOL":  true
+                     },
+    "status":  {
+                   "S":  "PROCESSING_VISION"
+               },
+    "processing_version":  {
+                               "S":  "1"
+                           },
+    "job_id":  {
+                   "S":  "vision-recovery-test-e3b998a4428047059deffd7f5c9369b9"
+               },
+    "owner_id":  {
+                     "S":  "test-user"
+                 }
+}

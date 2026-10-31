@@ -1,0 +1,7 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"Event\":\"s3:TestEvent\"}"
+                    }
+                ]
+}

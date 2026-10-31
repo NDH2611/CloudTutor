@@ -1,0 +1,1097 @@
+{
+    "MetricAlarms":  [
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-ai-dlq",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-ai-dlq",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.336000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "ALARM",
+                             "StateReason":  "Threshold Crossed: 1 out of the last 1 datapoints [2.0 (30/10/26 09:01:00)] was greater than or equal to the threshold (1.0) (minimum 1 datapoint for OK -\u003e ALARM transition).",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:18.275+0000\",\"startDate\":\"2026-10-30T09:01:00.000+0000\",\"statistic\":\"Maximum\",\"period\":60,\"recentDatapoints\":[2.0],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:01:00.000+0000\",\"sampleCount\":1.0,\"value\":2.0}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:18.278000+07:00",
+                             "MetricName":  "ApproximateNumberOfMessagesVisible",
+                             "Namespace":  "AWS/SQS",
+                             "Statistic":  "Maximum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "QueueName",
+                                                    "Value":  "sqs-cloudtutor-ai-dlq"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:18.278000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-async-failures",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-async-failures",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:28.630000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "ALARM",
+                             "StateReason":  "Threshold Crossed: 1 out of the last 1 datapoints [1.0 (30/10/26 09:26:00)] was greater than or equal to the threshold (1.0) (minimum 1 datapoint for OK -\u003e ALARM transition).",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:28:10.225+0000\",\"startDate\":\"2026-10-30T09:26:00.000+0000\",\"statistic\":\"Maximum\",\"period\":60,\"recentDatapoints\":[1.0],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:26:00.000+0000\",\"sampleCount\":1.0,\"value\":1.0}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:28:10.233000+07:00",
+                             "MetricName":  "ApproximateNumberOfMessagesVisible",
+                             "Namespace":  "AWS/SQS",
+                             "Statistic":  "Maximum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "QueueName",
+                                                    "Value":  "cloudtutor-m2-failure-monitoring-AsyncFailureQueue-gQkNm4FHNtK6"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:28:10.233000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-destination-lambda-cloudtutor-process-frames",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-destination-lambda-cloudtutor-process-frames",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.321000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:32.511+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:32.514000+07:00",
+                             "MetricName":  "DestinationDeliveryFailures",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-process-frames"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:32.514000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-destination-lambda-cloudtutor-reconcile-monitor",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-destination-lambda-cloudtutor-reconcile-monitor",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.304000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:44.964+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:44.965000+07:00",
+                             "MetricName":  "DestinationDeliveryFailures",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-reconcile-monitor"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:44.965000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-destination-lambda-cloudtutor-test-completion-c6491b01",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-destination-lambda-cloudtutor-test-completion-c6491b01",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.231000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:04:19.597+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:03:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:04:19.599000+07:00",
+                             "MetricName":  "DestinationDeliveryFailures",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-completion-c6491b01"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:04:19.599000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-destination-lambda-cloudtutor-test-ocr-c6491b01",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-destination-lambda-cloudtutor-test-ocr-c6491b01",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.248000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:36.129+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:36.132000+07:00",
+                             "MetricName":  "DestinationDeliveryFailures",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-ocr-c6491b01"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:36.132000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-destination-lambda-cloudtutor-transcription-completed",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-destination-lambda-cloudtutor-transcription-completed",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.426000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:39.269+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:39.271000+07:00",
+                             "MetricName":  "DestinationDeliveryFailures",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-transcription-completed"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:39.271000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-errors-lambda-cloudtutor-process-frames",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-errors-lambda-cloudtutor-process-frames",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.304000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:48.171+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:48.174000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-process-frames"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:48.174000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-errors-lambda-cloudtutor-reconcile-monitor",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-errors-lambda-cloudtutor-reconcile-monitor",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.368000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: 1 out of the last 1 datapoints [0.0 (30/10/26 08:57:00)] was not greater than or equal to the threshold (1.0) (minimum 1 datapoint for ALARM -\u003e OK transition).",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:02:46.239+0000\",\"startDate\":\"2026-10-30T08:57:00.000+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[0.0],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T08:57:00.000+0000\",\"sampleCount\":1.0,\"value\":0.0}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:02:46.241000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-reconcile-monitor"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:02:46.241000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-errors-lambda-cloudtutor-test-completion-c6491b01",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-errors-lambda-cloudtutor-test-completion-c6491b01",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.314000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:29:31.084+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:28:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:29:31.087000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-completion-c6491b01"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:29:31.087000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-errors-lambda-cloudtutor-test-ocr-c6491b01",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-errors-lambda-cloudtutor-test-ocr-c6491b01",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.247000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:43.483+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:43.484000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-ocr-c6491b01"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:43.484000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-errors-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-errors-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.304000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:05.976+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:05.979000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:05.979000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-errors-lambda-cloudtutor-vision-fallback",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-errors-lambda-cloudtutor-vision-fallback",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.228000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:04.035+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:02:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:04.036000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-vision-fallback"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:04.036000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-eventbridge-dlq",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-eventbridge-dlq",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:28:36.321000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:29:38.769+0000\",\"statistic\":\"Maximum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:27:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:29:38.782000+07:00",
+                             "MetricName":  "ApproximateNumberOfMessagesVisible",
+                             "Namespace":  "AWS/SQS",
+                             "Statistic":  "Maximum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "QueueName",
+                                                    "Value":  "cloudtutor-m2-failure-monitoring-EventDeliveryDLQ-MpLLMY3R8VRT"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:29:38.782000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-vision-dlq",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-vision-dlq",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:27.259000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: 1 out of the last 1 datapoints [0.0 (30/10/26 09:01:00)] was not greater than or equal to the threshold (1.0) (minimum 1 datapoint for ALARM -\u003e OK transition).",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:31.501+0000\",\"startDate\":\"2026-10-30T09:01:00.000+0000\",\"statistic\":\"Maximum\",\"period\":60,\"recentDatapoints\":[0.0],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:01:00.000+0000\",\"sampleCount\":1.0,\"value\":0.0}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:31.503000+07:00",
+                             "MetricName":  "ApproximateNumberOfMessagesVisible",
+                             "Namespace":  "AWS/SQS",
+                             "Statistic":  "Maximum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "QueueName",
+                                                    "Value":  "sqs-cloudtutor-vision-dlq"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:31.503000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-m2-vision-test-dlq",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-m2-vision-test-dlq",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T16:02:28.792000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T09:03:19.408+0000\",\"statistic\":\"Maximum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T09:01:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T16:03:19.409000+07:00",
+                             "MetricName":  "ApproximateNumberOfMessagesVisible",
+                             "Namespace":  "AWS/SQS",
+                             "Statistic":  "Maximum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "QueueName",
+                                                    "Value":  "cloudtutor-m2-failure-monitoring-VisionTestDLQ-ZfIVNiwfkhAy"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T16:03:19.409000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-real-job-recovery-errors",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-real-job-recovery-errors",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-30T18:05:51.322000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-30T11:06:56.951+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-30T11:05:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-30T18:06:56.953000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-reconcile-real-jobs"
+                                                }
+                                            ],
+                             "Period":  60,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-30T18:06:56.953000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-transcription-completed-errors",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-transcription-completed-errors",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-11T17:49:13.356000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-11T10:50:22.541+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-11T10:45:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-11T17:50:22.543000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-transcription-completed"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-11T17:50:22.543000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-transcription-worker-errors",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-transcription-worker-errors",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-11T17:49:07.301000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-11T10:50:13.853+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-11T10:45:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-11T17:50:13.860000+07:00",
+                             "MetricName":  "Errors",
+                             "Namespace":  "AWS/Lambda",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-start-transcription"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-11T17:50:13.860000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-video-dlq-messages",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-video-dlq-messages",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-11T17:49:19.230000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: 1 datapoint [0.0 (11/10/26 12:20:00)] was not greater than or equal to the threshold (1.0).",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-11T12:26:49.692+0000\",\"startDate\":\"2026-10-11T12:20:00.000+0000\",\"statistic\":\"Maximum\",\"period\":300,\"recentDatapoints\":[0.0],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-11T12:20:00.000+0000\",\"sampleCount\":5.0,\"value\":0.0}]}",
+                             "StateUpdatedTimestamp":  "2026-10-11T19:26:49.694000+07:00",
+                             "MetricName":  "ApproximateNumberOfMessagesVisible",
+                             "Namespace":  "AWS/SQS",
+                             "Statistic":  "Maximum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "QueueName",
+                                                    "Value":  "sqs-cloudtutor-video-dlq"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-11T19:26:49.694000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-DailyQuota-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-DailyQuota-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.483000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:44:38.797+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:39:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:44:38.799000+07:00",
+                             "MetricName":  "DailyQuota",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:44:38.799000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-DailyQuota-lambda-cloudtutor-vision-fallback",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-DailyQuota-lambda-cloudtutor-vision-fallback",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.504000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:45:10.786+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:40:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:45:10.788000+07:00",
+                             "MetricName":  "DailyQuota",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-vision-fallback"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:45:10.788000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-Gemini429-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-Gemini429-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.467000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:44:52.187+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":3.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:39:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:44:52.189000+07:00",
+                             "MetricName":  "Gemini429",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  3.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:44:52.189000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-Gemini429-lambda-cloudtutor-vision-fallback",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-Gemini429-lambda-cloudtutor-vision-fallback",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.349000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:44:28.539+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":3.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:39:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:44:28.542000+07:00",
+                             "MetricName":  "Gemini429",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-vision-fallback"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  3.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:44:28.542000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-InvalidOutput-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-InvalidOutput-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.483000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:45:02.967+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:40:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:45:02.969000+07:00",
+                             "MetricName":  "InvalidOutput",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:45:02.969000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-InvalidOutput-lambda-cloudtutor-vision-fallback",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-InvalidOutput-lambda-cloudtutor-vision-fallback",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.468000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:45:09.182+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:40:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:45:09.185000+07:00",
+                             "MetricName":  "InvalidOutput",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-vision-fallback"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:45:09.185000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-SecretReadErrors-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-SecretReadErrors-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.420000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:45:22.842+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:40:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:45:22.843000+07:00",
+                             "MetricName":  "SecretReadErrors",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:45:22.843000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-SecretReadErrors-lambda-cloudtutor-vision-fallback",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-SecretReadErrors-lambda-cloudtutor-vision-fallback",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.392000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:45:11.489+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:40:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:45:11.492000+07:00",
+                             "MetricName":  "SecretReadErrors",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-vision-fallback"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:45:11.492000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-TerminalFailures-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-TerminalFailures-lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.470000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:45:02.128+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:40:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:45:02.131000+07:00",
+                             "MetricName":  "TerminalFailures",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:45:02.131000+07:00"
+                         },
+                         {
+                             "AlarmName":  "alarm-cloudtutor-vision-TerminalFailures-lambda-cloudtutor-vision-fallback",
+                             "AlarmArn":  "arn:aws:cloudwatch:ap-southeast-1:251929332061:alarm:alarm-cloudtutor-vision-TerminalFailures-lambda-cloudtutor-vision-fallback",
+                             "AlarmConfigurationUpdatedTimestamp":  "2026-10-31T14:44:05.447000+07:00",
+                             "ActionsEnabled":  true,
+                             "OKActions":  [
+
+                                           ],
+                             "AlarmActions":  [
+                                                  "arn:aws:sns:ap-southeast-1:251929332061:sns-cloudtutor-alerts"
+                                              ],
+                             "InsufficientDataActions":  [
+
+                                                         ],
+                             "StateValue":  "OK",
+                             "StateReason":  "Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].",
+                             "StateReasonData":  "{\"version\":\"1.0\",\"queryDate\":\"2026-10-31T07:44:46.033+0000\",\"statistic\":\"Sum\",\"period\":300,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-10-31T07:39:00.000+0000\"}]}",
+                             "StateUpdatedTimestamp":  "2026-10-31T14:44:46.035000+07:00",
+                             "MetricName":  "TerminalFailures",
+                             "Namespace":  "CloudTutor/Vision",
+                             "Statistic":  "Sum",
+                             "Dimensions":  [
+                                                {
+                                                    "Name":  "FunctionName",
+                                                    "Value":  "lambda-cloudtutor-vision-fallback"
+                                                },
+                                                {
+                                                    "Name":  "Model",
+                                                    "Value":  "gemini-3.5-flash-lite"
+                                                }
+                                            ],
+                             "Period":  300,
+                             "EvaluationPeriods":  1,
+                             "DatapointsToAlarm":  1,
+                             "Threshold":  1.0,
+                             "ComparisonOperator":  "GreaterThanOrEqualToThreshold",
+                             "TreatMissingData":  "notBreaching",
+                             "StateTransitionedTimestamp":  "2026-10-31T14:44:46.035000+07:00"
+                         }
+                     ],
+    "CompositeAlarms":  [
+
+                        ],
+    "LogAlarms":  [
+
+                  ]
+}

@@ -1,0 +1,9 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"duration_seconds\":30.04,\"processing_version\":\"1\",\"frame_interval_seconds\":5,\"job_id\":\"vision-check-d9e343d9ceab4582a7e15db9c1dcda46\",\"owner_id\":\"test-user\"}",
+                        "messageId":  "vision-job-integration-test-001",
+                        "eventSource":  "aws:sqs"
+                    }
+                ]
+}

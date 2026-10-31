@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "test": "VISION_CACHE_TEST",
+  "job_id": "vision-mixed-test-7d8f6d8f5fc0456982127ea1e18f8d7d",
+  "owner_id": "test-user",
+  "processing_version": "1",
+  "source": "VISION",
+  "text": "Ảnh chụp màn hình video karaoke với nền trời xanh có mây hồng và các vì sao. Ở góc trên bên trái có chữ 'Karaoke' kèm hình cây đàn guitar, phía trên giữa là tiêu đề 'Em của quá khứ', góc trên bên phải có logo tròn và chữ 'Tone Nữ'. Ở góc dưới bên phải là hình minh họa một cô gái mặc áo khoác dài và khăn quàng cổ đang ngước nhìn lên. Ở phần dưới màn hình hiển thị lời bài hát gồm hai dòng chữ: 'Ngoài anh em có những ai,' và 'bên em hiện tại?'.",
+  "segments": [
+    {
+      "start_time": 5,
+      "end_time": 10,
+      "text": "Ảnh chụp màn hình video karaoke với nền trời xanh có mây hồng và các vì sao. Ở góc trên bên trái có chữ 'Karaoke' kèm hình cây đàn guitar, phía trên giữa là tiêu đề 'Em của quá khứ', góc trên bên phải có logo tròn và chữ 'Tone Nữ'. Ở góc dưới bên phải là hình minh họa một cô gái mặc áo khoác dài và khăn quàng cổ đang ngước nhìn lên. Ở phần dưới màn hình hiển thị lời bài hát gồm hai dòng chữ: 'Ngoài anh em có những ai,' và 'bên em hiện tại?'.",
+      "source": "VISION",
+      "frame_key": "frames/test-user/vision-mixed-test-7d8f6d8f5fc0456982127ea1e18f8d7d/source_frame.0000001.jpg"
+    }
+  ],
+  "selected_frame_count": 2,
+  "frame_interval_seconds": 5,
+  "duration_seconds": 30.04,
+  "usage": [
+    {
+      "frame_key": "frames/test-user/vision-mixed-test-7d8f6d8f5fc0456982127ea1e18f8d7d/source_frame.0000000.jpg",
+      "usage": {
+        "promptTokenCount": 1232,
+        "candidatesTokenCount": 16,
+        "totalTokenCount": 1248,
+        "promptTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1100
+          },
+          {
+            "modality": "TEXT",
+            "tokenCount": 132
+          }
+        ],
+        "serviceTier": "standard"
+      }
+    },
+    {
+      "frame_key": "frames/test-user/vision-mixed-test-7d8f6d8f5fc0456982127ea1e18f8d7d/source_frame.0000001.jpg",
+      "usage": {
+        "promptTokenCount": 1232,
+        "candidatesTokenCount": 139,
+        "totalTokenCount": 1371,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 132
+          },
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1100
+          }
+        ],
+        "serviceTier": "standard"
+      }
+    }
+  ],
+  "warnings": [
+    "AI_GENERATED_VISUAL_DESCRIPTION",
+    "VISION_TIMESTAMPS_ARE_SAMPLED"
+  ]
+}

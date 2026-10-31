@@ -1,0 +1,482 @@
+{
+  "run_id": "benchmark-2026-10-30T10-03-17-594Z-abfd1bd6",
+  "started_at": "2026-10-30T10:03:17.598Z",
+  "scope": "WORKER_TO_ASR_AI_HANDOFF",
+  "trigger": "DIRECT_SYNCHRONOUS_WORKER_INVOCATION",
+  "region": "ap-southeast-1",
+  "source_video_seconds": 16.9015,
+  "dataset": "Copies of one synthetic English speech video",
+  "batch_sizes": [
+    1,
+    5,
+    10,
+    20
+  ],
+  "dispatch_concurrency": 4,
+  "timeout_per_batch_seconds": 600,
+  "cost_usd": null,
+  "cost_note": "Not calculated; requires verified service pricing",
+  "batches": [
+    {
+      "size": 1,
+      "setup_started_at": "2026-10-30T10:03:17.601Z",
+      "jobs": [
+        {
+          "job_id": "bench-1-1-5ee005c8-761a-44ae-b660-bb971e300d32",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-1-1-5ee005c8-761a-44ae-b660-bb971e300d32/source.mp4",
+          "invoked_at": "2026-10-30T10:03:18.335Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "3005b2f2-ba43-4b53-ac0c-cc8673b2e211",
+          "handoff_at": "2026-10-30T10:03:32.260Z",
+          "latency_seconds": 13.925,
+          "transcript_key": "results/test-user/bench-1-1-5ee005c8-761a-44ae-b660-bb971e300d32/normalized-transcript.json"
+        }
+      ],
+      "started_at": "2026-10-30T10:03:18.333Z",
+      "finished_at": "2026-10-30T10:03:41.910Z",
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "mean_seconds": 13.925,
+      "p95_seconds": 13.925,
+      "max_seconds": 13.925,
+      "wall_seconds": 23.578,
+      "submitted_video_minutes": 0.282
+    },
+    {
+      "size": 5,
+      "setup_started_at": "2026-10-30T10:03:41.913Z",
+      "jobs": [
+        {
+          "job_id": "bench-5-1-796a4aaa-39d3-4b70-90bc-8c274cba48a9",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-5-1-796a4aaa-39d3-4b70-90bc-8c274cba48a9/source.mp4",
+          "invoked_at": "2026-10-30T10:03:42.500Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "8c3d3fd8-2068-40a4-938a-bfa935ceaf24",
+          "handoff_at": "2026-10-30T10:03:55.043Z",
+          "latency_seconds": 12.543,
+          "transcript_key": "results/test-user/bench-5-1-796a4aaa-39d3-4b70-90bc-8c274cba48a9/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-5-2-6dd696d4-2c4a-4abf-ae8c-f9351c7ea47b",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-5-2-6dd696d4-2c4a-4abf-ae8c-f9351c7ea47b/source.mp4",
+          "invoked_at": "2026-10-30T10:03:42.521Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "1cdf0ed0-577f-4d99-8286-e6aa6b3164fb",
+          "handoff_at": "2026-10-30T10:03:46.151Z",
+          "latency_seconds": 3.63,
+          "transcript_key": "results/test-user/bench-5-2-6dd696d4-2c4a-4abf-ae8c-f9351c7ea47b/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-5-3-00554564-fc07-47a9-aa8f-2f9d833b187e",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-5-3-00554564-fc07-47a9-aa8f-2f9d833b187e/source.mp4",
+          "invoked_at": "2026-10-30T10:03:42.536Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "b85558bb-20bd-475c-aa42-305549e1ecf6",
+          "handoff_at": "2026-10-30T10:03:46.499Z",
+          "latency_seconds": 3.963,
+          "transcript_key": "results/test-user/bench-5-3-00554564-fc07-47a9-aa8f-2f9d833b187e/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-5-4-669aafc9-110d-4351-a843-13a5d3cede2e",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-5-4-669aafc9-110d-4351-a843-13a5d3cede2e/source.mp4",
+          "invoked_at": "2026-10-30T10:03:42.554Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "42310547-3ae0-4721-b70f-c1132921a964",
+          "handoff_at": "2026-10-30T10:03:55.620Z",
+          "latency_seconds": 13.066,
+          "transcript_key": "results/test-user/bench-5-4-669aafc9-110d-4351-a843-13a5d3cede2e/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-5-5-27a591d9-1b85-43ef-a484-c8229468b75b",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-5-5-27a591d9-1b85-43ef-a484-c8229468b75b/source.mp4",
+          "invoked_at": "2026-10-30T10:03:44.779Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "fcae5709-ee68-437b-b5ef-1a914f065bb4",
+          "handoff_at": "2026-10-30T10:03:47.878Z",
+          "latency_seconds": 3.099,
+          "transcript_key": "results/test-user/bench-5-5-27a591d9-1b85-43ef-a484-c8229468b75b/normalized-transcript.json"
+        }
+      ],
+      "started_at": "2026-10-30T10:03:42.499Z",
+      "finished_at": "2026-10-30T10:03:57.293Z",
+      "success": 5,
+      "failed": 0,
+      "timeout": 0,
+      "mean_seconds": 7.26,
+      "p95_seconds": 13.066,
+      "max_seconds": 13.066,
+      "wall_seconds": 14.794,
+      "submitted_video_minutes": 1.408
+    },
+    {
+      "size": 10,
+      "setup_started_at": "2026-10-30T10:03:57.294Z",
+      "jobs": [
+        {
+          "job_id": "bench-10-1-c25eccac-8ab9-4180-8281-9c0d28dec68c",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-1-c25eccac-8ab9-4180-8281-9c0d28dec68c/source.mp4",
+          "invoked_at": "2026-10-30T10:03:58.098Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "b64ce201-c379-4b57-8a4e-c7df4ccb4566",
+          "handoff_at": "2026-10-30T10:04:02.045Z",
+          "latency_seconds": 3.947,
+          "transcript_key": "results/test-user/bench-10-1-c25eccac-8ab9-4180-8281-9c0d28dec68c/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-2-d229b7a5-63f0-4d1b-a45c-8abd035522b0",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-2-d229b7a5-63f0-4d1b-a45c-8abd035522b0/source.mp4",
+          "invoked_at": "2026-10-30T10:03:58.111Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "ce7daaaf-9c7f-430e-ae14-8aa31cf52065",
+          "handoff_at": "2026-10-30T10:04:02.273Z",
+          "latency_seconds": 4.162,
+          "transcript_key": "results/test-user/bench-10-2-d229b7a5-63f0-4d1b-a45c-8abd035522b0/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-3-00aee0b8-f5bc-42cb-8802-515acd5c3c65",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-3-00aee0b8-f5bc-42cb-8802-515acd5c3c65/source.mp4",
+          "invoked_at": "2026-10-30T10:03:58.125Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "666e7a29-a51f-427d-8333-5d5e98aa4903",
+          "handoff_at": "2026-10-30T10:04:02.886Z",
+          "latency_seconds": 4.761,
+          "transcript_key": "results/test-user/bench-10-3-00aee0b8-f5bc-42cb-8802-515acd5c3c65/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-4-c3f3b9a4-0dc2-421b-b4d3-e1ff28d12bc7",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-4-c3f3b9a4-0dc2-421b-b4d3-e1ff28d12bc7/source.mp4",
+          "invoked_at": "2026-10-30T10:03:58.139Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "2462931e-e140-402b-9c6e-2d9401eef5e7",
+          "handoff_at": "2026-10-30T10:04:01.532Z",
+          "latency_seconds": 3.393,
+          "transcript_key": "results/test-user/bench-10-4-c3f3b9a4-0dc2-421b-b4d3-e1ff28d12bc7/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-5-90167a11-2ed2-492f-9c31-1bcc65dfd18f",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-5-90167a11-2ed2-492f-9c31-1bcc65dfd18f/source.mp4",
+          "invoked_at": "2026-10-30T10:04:00.471Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "9f4a4bb0-a259-4364-aad3-5e0e42f433fb",
+          "handoff_at": "2026-10-30T10:04:03.567Z",
+          "latency_seconds": 3.096,
+          "transcript_key": "results/test-user/bench-10-5-90167a11-2ed2-492f-9c31-1bcc65dfd18f/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-6-ddf58946-c575-424b-bf89-b202981ecc85",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-6-ddf58946-c575-424b-bf89-b202981ecc85/source.mp4",
+          "invoked_at": "2026-10-30T10:04:00.480Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "e35b3577-a3f0-46bb-b2a2-b0e827e0e593",
+          "handoff_at": "2026-10-30T10:04:04.791Z",
+          "latency_seconds": 4.311,
+          "transcript_key": "results/test-user/bench-10-6-ddf58946-c575-424b-bf89-b202981ecc85/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-7-4b61444f-c103-4f22-9d63-877f555e055a",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-7-4b61444f-c103-4f22-9d63-877f555e055a/source.mp4",
+          "invoked_at": "2026-10-30T10:04:00.544Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "4a505e67-8b81-455d-a53b-a849bcc44e13",
+          "handoff_at": "2026-10-30T10:04:10.562Z",
+          "latency_seconds": 10.018,
+          "transcript_key": "results/test-user/bench-10-7-4b61444f-c103-4f22-9d63-877f555e055a/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-8-54ead331-ce30-48ee-8180-03cbaac5739a",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-8-54ead331-ce30-48ee-8180-03cbaac5739a/source.mp4",
+          "invoked_at": "2026-10-30T10:04:00.578Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "db6962e3-02b4-4381-a370-73344a8fec1a",
+          "handoff_at": "2026-10-30T10:04:03.563Z",
+          "latency_seconds": 2.985,
+          "transcript_key": "results/test-user/bench-10-8-54ead331-ce30-48ee-8180-03cbaac5739a/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-9-979ff899-a76e-440b-84d9-8cf03b5694b9",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-9-979ff899-a76e-440b-84d9-8cf03b5694b9/source.mp4",
+          "invoked_at": "2026-10-30T10:04:02.454Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "b048d84e-028c-457e-9465-c870a6432585",
+          "handoff_at": "2026-10-30T10:04:05.502Z",
+          "latency_seconds": 3.048,
+          "transcript_key": "results/test-user/bench-10-9-979ff899-a76e-440b-84d9-8cf03b5694b9/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-10-10-0e876c81-ec57-4eb0-901a-64bafd54bc1c",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-10-10-0e876c81-ec57-4eb0-901a-64bafd54bc1c/source.mp4",
+          "invoked_at": "2026-10-30T10:04:02.507Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "d8cc1915-ad62-4adf-8823-0f90f2354e5a",
+          "handoff_at": "2026-10-30T10:04:05.437Z",
+          "latency_seconds": 2.93,
+          "transcript_key": "results/test-user/bench-10-10-0e876c81-ec57-4eb0-901a-64bafd54bc1c/normalized-transcript.json"
+        }
+      ],
+      "started_at": "2026-10-30T10:03:58.074Z",
+      "finished_at": "2026-10-30T10:04:14.881Z",
+      "success": 10,
+      "failed": 0,
+      "timeout": 0,
+      "mean_seconds": 4.265,
+      "p95_seconds": 10.018,
+      "max_seconds": 10.018,
+      "wall_seconds": 16.807,
+      "submitted_video_minutes": 2.817
+    },
+    {
+      "size": 20,
+      "setup_started_at": "2026-10-30T10:04:14.883Z",
+      "jobs": [
+        {
+          "job_id": "bench-20-1-8199ea58-2015-42f6-b940-4d361e39892a",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-1-8199ea58-2015-42f6-b940-4d361e39892a/source.mp4",
+          "invoked_at": "2026-10-30T10:04:15.941Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "e6af1e00-4025-472f-bc0d-7c5dddbac135",
+          "handoff_at": "2026-10-30T10:04:20.313Z",
+          "latency_seconds": 4.372,
+          "transcript_key": "results/test-user/bench-20-1-8199ea58-2015-42f6-b940-4d361e39892a/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-2-4781eea1-43c9-4465-becc-86d2c4e5ac48",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-2-4781eea1-43c9-4465-becc-86d2c4e5ac48/source.mp4",
+          "invoked_at": "2026-10-30T10:04:15.953Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "ee175e6a-706e-4cf6-adbb-576104427f5a",
+          "handoff_at": "2026-10-30T10:04:19.612Z",
+          "latency_seconds": 3.659,
+          "transcript_key": "results/test-user/bench-20-2-4781eea1-43c9-4465-becc-86d2c4e5ac48/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-3-b4caa2ee-7330-49f3-b900-559fef8a8c02",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-3-b4caa2ee-7330-49f3-b900-559fef8a8c02/source.mp4",
+          "invoked_at": "2026-10-30T10:04:15.986Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "6bf20f97-248c-401f-affe-26579868ebd9",
+          "handoff_at": "2026-10-30T10:04:19.600Z",
+          "latency_seconds": 3.614,
+          "transcript_key": "results/test-user/bench-20-3-b4caa2ee-7330-49f3-b900-559fef8a8c02/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-4-ddf2bd21-adab-4d2d-b67b-36cc542e5fb5",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-4-ddf2bd21-adab-4d2d-b67b-36cc542e5fb5/source.mp4",
+          "invoked_at": "2026-10-30T10:04:15.999Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "59291146-a1d6-4e48-b7f1-6a5afae83f19",
+          "handoff_at": "2026-10-30T10:04:19.402Z",
+          "latency_seconds": 3.403,
+          "transcript_key": "results/test-user/bench-20-4-ddf2bd21-adab-4d2d-b67b-36cc542e5fb5/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-5-cbe23a38-541d-46ce-b8a7-100da7fadde2",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-5-cbe23a38-541d-46ce-b8a7-100da7fadde2/source.mp4",
+          "invoked_at": "2026-10-30T10:04:18.236Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "87533141-22f6-43a2-91f4-1111004d3b4e",
+          "handoff_at": "2026-10-30T10:04:21.254Z",
+          "latency_seconds": 3.018,
+          "transcript_key": "results/test-user/bench-20-5-cbe23a38-541d-46ce-b8a7-100da7fadde2/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-6-3be7e3e7-a78a-435d-b134-1c8fcb642438",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-6-3be7e3e7-a78a-435d-b134-1c8fcb642438/source.mp4",
+          "invoked_at": "2026-10-30T10:04:18.248Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "1a546a04-e6af-4658-9e10-77469821be64",
+          "handoff_at": "2026-10-30T10:04:21.337Z",
+          "latency_seconds": 3.089,
+          "transcript_key": "results/test-user/bench-20-6-3be7e3e7-a78a-435d-b134-1c8fcb642438/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-7-e53a99e6-d982-4626-a968-803d11e46308",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-7-e53a99e6-d982-4626-a968-803d11e46308/source.mp4",
+          "invoked_at": "2026-10-30T10:04:18.272Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "240fa61a-e751-41ec-8417-240a5ed2c041",
+          "handoff_at": "2026-10-30T10:04:21.119Z",
+          "latency_seconds": 2.847,
+          "transcript_key": "results/test-user/bench-20-7-e53a99e6-d982-4626-a968-803d11e46308/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-8-6e8b4449-f25f-47e4-9cd5-a770ffe7171f",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-8-6e8b4449-f25f-47e4-9cd5-a770ffe7171f/source.mp4",
+          "invoked_at": "2026-10-30T10:04:18.389Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "d40b2b38-a0d8-4013-9312-98b2603dd804",
+          "handoff_at": "2026-10-30T10:04:21.585Z",
+          "latency_seconds": 3.196,
+          "transcript_key": "results/test-user/bench-20-8-6e8b4449-f25f-47e4-9cd5-a770ffe7171f/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-9-6a3fa069-9c42-4841-b3ee-66fdd637c939",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-9-6a3fa069-9c42-4841-b3ee-66fdd637c939/source.mp4",
+          "invoked_at": "2026-10-30T10:04:20.256Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "71aee503-a209-4253-9d74-10915ad3ae30",
+          "handoff_at": "2026-10-30T10:04:23.475Z",
+          "latency_seconds": 3.219,
+          "transcript_key": "results/test-user/bench-20-9-6a3fa069-9c42-4841-b3ee-66fdd637c939/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-10-4f454ea7-6f29-4d4c-b822-e39a1f425014",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-10-4f454ea7-6f29-4d4c-b822-e39a1f425014/source.mp4",
+          "invoked_at": "2026-10-30T10:04:20.271Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "37f4b4b8-290f-4e2d-ae54-3bfc9a4d1631",
+          "handoff_at": "2026-10-30T10:04:23.437Z",
+          "latency_seconds": 3.166,
+          "transcript_key": "results/test-user/bench-20-10-4f454ea7-6f29-4d4c-b822-e39a1f425014/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-11-3aa1c00c-4691-4f36-b08d-d17a7258efa3",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-11-3aa1c00c-4691-4f36-b08d-d17a7258efa3/source.mp4",
+          "invoked_at": "2026-10-30T10:04:20.306Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "57da7714-ec78-47d7-a554-c5fa37a9a7ce",
+          "handoff_at": "2026-10-30T10:04:24.023Z",
+          "latency_seconds": 3.717,
+          "transcript_key": "results/test-user/bench-20-11-3aa1c00c-4691-4f36-b08d-d17a7258efa3/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-12-44d5e329-8968-4633-b1bf-6254d6cd1e97",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-12-44d5e329-8968-4633-b1bf-6254d6cd1e97/source.mp4",
+          "invoked_at": "2026-10-30T10:04:20.383Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "47f024ee-24a9-43e5-a748-7a39fc258ec1",
+          "handoff_at": "2026-10-30T10:04:24.078Z",
+          "latency_seconds": 3.695,
+          "transcript_key": "results/test-user/bench-20-12-44d5e329-8968-4633-b1bf-6254d6cd1e97/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-13-7c06b1ba-5b4b-478d-82b6-798a6eaaf7c6",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-13-7c06b1ba-5b4b-478d-82b6-798a6eaaf7c6/source.mp4",
+          "invoked_at": "2026-10-30T10:04:22.457Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "2f71d9bd-f7e0-4d25-8304-a18e05913659",
+          "handoff_at": "2026-10-30T10:04:25.775Z",
+          "latency_seconds": 3.318,
+          "transcript_key": "results/test-user/bench-20-13-7c06b1ba-5b4b-478d-82b6-798a6eaaf7c6/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-14-ae0ef612-85b1-49a1-b719-a1a6dcce361c",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-14-ae0ef612-85b1-49a1-b719-a1a6dcce361c/source.mp4",
+          "invoked_at": "2026-10-30T10:04:22.474Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "15c137ee-bb2b-4fe0-9542-d29263ffaeab",
+          "handoff_at": "2026-10-30T10:04:25.692Z",
+          "latency_seconds": 3.218,
+          "transcript_key": "results/test-user/bench-20-14-ae0ef612-85b1-49a1-b719-a1a6dcce361c/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-15-be0cb61d-a726-453a-a12f-75d59d5351b4",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-15-be0cb61d-a726-453a-a12f-75d59d5351b4/source.mp4",
+          "invoked_at": "2026-10-30T10:04:22.497Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "33ad911a-84ec-478f-b1cb-90d29e2017f7",
+          "handoff_at": "2026-10-30T10:04:25.911Z",
+          "latency_seconds": 3.414,
+          "transcript_key": "results/test-user/bench-20-15-be0cb61d-a726-453a-a12f-75d59d5351b4/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-16-f2df111b-0f4c-4169-a2bc-5ad65886482b",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-16-f2df111b-0f4c-4169-a2bc-5ad65886482b/source.mp4",
+          "invoked_at": "2026-10-30T10:04:22.510Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "caef4bcf-77e9-445b-9f95-403a498789ba",
+          "handoff_at": "2026-10-30T10:04:25.631Z",
+          "latency_seconds": 3.121,
+          "transcript_key": "results/test-user/bench-20-16-f2df111b-0f4c-4169-a2bc-5ad65886482b/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-17-a89415c1-8e37-4156-9332-43e4804716f8",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-17-a89415c1-8e37-4156-9332-43e4804716f8/source.mp4",
+          "invoked_at": "2026-10-30T10:04:24.732Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "f3d4e868-158b-4040-b399-04e3a035786e",
+          "handoff_at": "2026-10-30T10:04:27.688Z",
+          "latency_seconds": 2.956,
+          "transcript_key": "results/test-user/bench-20-17-a89415c1-8e37-4156-9332-43e4804716f8/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-18-72704181-8b51-4e39-9bc6-453695df55fc",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-18-72704181-8b51-4e39-9bc6-453695df55fc/source.mp4",
+          "invoked_at": "2026-10-30T10:04:24.747Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "6b209d6d-13be-423a-add8-c2409c20596e",
+          "handoff_at": "2026-10-30T10:04:27.992Z",
+          "latency_seconds": 3.245,
+          "transcript_key": "results/test-user/bench-20-18-72704181-8b51-4e39-9bc6-453695df55fc/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-19-7e902b9a-d7dd-41b5-bd41-c4c8b8eb4859",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-19-7e902b9a-d7dd-41b5-bd41-c4c8b8eb4859/source.mp4",
+          "invoked_at": "2026-10-30T10:04:24.765Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "a859dd98-457b-4eca-bcca-ada5d7164bfd",
+          "handoff_at": "2026-10-30T10:04:27.806Z",
+          "latency_seconds": 3.041,
+          "transcript_key": "results/test-user/bench-20-19-7e902b9a-d7dd-41b5-bd41-c4c8b8eb4859/normalized-transcript.json"
+        },
+        {
+          "job_id": "bench-20-20-395e5f3d-b6cb-44db-b7eb-2ae5dfd8a31d",
+          "outcome": "SUCCESS",
+          "video_key": "e2e-videos/test-user/bench-20-20-395e5f3d-b6cb-44db-b7eb-2ae5dfd8a31d/source.mp4",
+          "invoked_at": "2026-10-30T10:04:24.780Z",
+          "last_status": "PROCESSING_AI",
+          "processing_version": "f3f9d237-02b3-42f1-9b89-84073e47b509",
+          "handoff_at": "2026-10-30T10:04:27.733Z",
+          "latency_seconds": 2.953,
+          "transcript_key": "results/test-user/bench-20-20-395e5f3d-b6cb-44db-b7eb-2ae5dfd8a31d/normalized-transcript.json"
+        }
+      ],
+      "started_at": "2026-10-30T10:04:15.940Z",
+      "finished_at": "2026-10-30T10:04:37.533Z",
+      "success": 20,
+      "failed": 0,
+      "timeout": 0,
+      "mean_seconds": 3.313,
+      "p95_seconds": 3.717,
+      "max_seconds": 4.372,
+      "wall_seconds": 21.593,
+      "submitted_video_minutes": 5.634
+    }
+  ],
+  "finished_at": "2026-10-30T10:04:37.535Z"
+}
