@@ -1,0 +1,12 @@
+{
+    "Label":  "GeminiRequests",
+    "Datapoints":  [
+                       {
+                           "Timestamp":  "2026-10-31T14:44:00+07:00",
+                           "SampleCount":  1.0,
+                           "Average":  1.0,
+                           "Sum":  1.0,
+                           "Unit":  "Count"
+                       }
+                   ]
+}
