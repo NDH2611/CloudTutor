@@ -1,0 +1,9 @@
+[
+  {"id":"en-clear","language":"en","image":"en-clear.png","font_size":42,"gray":0,"lines":["Cloud computing stores data on remote servers.","Each student can upload a private video."]},
+  {"id":"en-small","language":"en","image":"en-small.png","font_size":24,"gray":0,"lines":["Cloud computing stores data on remote servers.","Each student can upload a private video."]},
+  {"id":"vi-clear","language":"vi","image":"vi-clear.png","font_size":42,"gray":0,"lines":["Điện toán đám mây giúp lưu trữ dữ liệu.","Mỗi sinh viên có thư viện video riêng."]},
+  {"id":"vi-small","language":"vi","image":"vi-small.png","font_size":24,"gray":0,"lines":["Điện toán đám mây giúp lưu trữ dữ liệu.","Mỗi sinh viên có thư viện video riêng."]},
+  {"id":"vi-low-contrast","language":"vi","image":"vi-low-contrast.png","font_size":36,"gray":185,"lines":["Điện toán đám mây giúp lưu trữ dữ liệu.","Mỗi sinh viên có thư viện video riêng."]},
+  {"id":"vi-accents","language":"vi","image":"vi-accents.png","font_size":42,"gray":0,"lines":["ma má mà mả mã mạ", "Đường truyền ổn định, dữ liệu được bảo vệ."]},
+  {"id":"blank","language":"none","image":"blank.png","font_size":42,"gray":0,"lines":[]}
+]

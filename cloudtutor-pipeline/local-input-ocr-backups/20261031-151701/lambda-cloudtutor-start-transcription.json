@@ -1,0 +1,1 @@
+{"handler":"index.handler","code_hash":"xOLNXvzbkLRQ7+yzKDz2t8YexlqSU6nfDR577hCq3Us=","layers":["arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"],"function_name":"lambda-cloudtutor-start-transcription"}

@@ -1,3 +1,4 @@
+// M2_INPUT_OCR_V1
 const {
   S3Client,
   ListObjectsV2Command,
@@ -23,36 +24,7 @@ const { stageTextResult } = require("./stageTextResult");
 const { dispatchTextHandoff } = require("./dispatchTextHandoff");
 const { recoverTextHandoff } = require("./recoverTextHandoff");
 const { routeOcrToVision } = require("./routeOcrToVision");
-// Chuẩn hóa để so sánh, vẫn giữ dấu tiếng Việt.
-function comparisonKey(text) {
-  return text
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-// Loại dòng giống nhau trong cùng một frame.
-function buildFrameText(lines) {
-  const seen = new Set();
-  const texts = [];
-
-  for (const line of lines) {
-    const text = (line.DetectedText || "")
-      .normalize("NFC")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    const key = comparisonKey(text);
-
-    if (!key || seen.has(key)) continue;
-
-    seen.add(key);
-    texts.push(text);
-  }
-
-  return texts.join("\n");
-}
+const { comparisonKey, buildFrameText, selectOcrLines } = require("./ocrText");
 
 const region = process.env.AWS_REGION || "ap-southeast-1";
 const s3 = new S3Client({ region });
@@ -398,12 +370,7 @@ exports.handler = async (event) => {
       detections: response.TextDetections || [],
     });
 
-    const lines = (response.TextDetections || [])
-      .filter(item => item.Type === "LINE" && item.Confidence >= 80)
-      .sort((a, b) =>
-        a.Geometry.BoundingBox.Top - b.Geometry.BoundingBox.Top ||
-        a.Geometry.BoundingBox.Left - b.Geometry.BoundingBox.Left
-      );
+    const lines = selectOcrLines(response.TextDetections);
 
     const text = buildFrameText(lines);
     const start = frame.index * interval;
@@ -435,6 +402,7 @@ exports.handler = async (event) => {
 const warnings = [
   "OCR_TIMESTAMPS_ARE_SAMPLED",
   "OCR_TEXT_REQUIRES_REVIEW",
+  "OCR_LANGUAGE_SUPPORT_LIMITED",
 ];
   if (duration > (frames[frames.length - 1].index + 1) * interval) {
     warnings.push("FRAME_COVERAGE_TRUNCATED");

@@ -1,3 +1,5 @@
+// M2_INPUT_OCR_V1
+const { guardInitialVideo } = require("./workerInputGuard");
 const { randomUUID } = require("node:crypto");
 
 const {
@@ -42,6 +44,7 @@ async function prepareAsrJob({
   jobId,
   ownerId,
   videoKey,
+  bucket, eventEtag, eventVersionId,
 }) {
   const job = await readJob(jobId);
 
@@ -58,7 +61,7 @@ async function prepareAsrJob({
 
   const status = job.status?.S;
 
-  if (status === "DELETING" || status === "DELETED") {
+  if (status === "DELETING" || status === "DELETED" || (job.deleted_at?.S && job.deleted_at.S.trim())) {
     return {
       skipped: true,
       reason: "JOB_DELETED",
@@ -111,6 +114,8 @@ async function prepareAsrJob({
     throw new Error("Job moi da co processing_version; can doi soat");
   }
 
+  const validation = await guardInitialVideo({ dynamodb, jobsTable, jobId, ownerId, videoKey, bucket, eventEtag, eventVersionId });
+  if (validation.skipped) return validation;
   const processingVersion = randomUUID();
 
   const transcriptionJobName =
@@ -134,11 +139,12 @@ async function prepareAsrJob({
       ConditionExpression:
         "#owner = :owner AND #video = :video " +
         "AND #status IN (:created, :uploaded) " +
-        "AND attribute_not_exists(#version)",
+        "AND attribute_not_exists(#version) " +
+        "AND (attribute_not_exists(#deleted) OR #deleted = :empty OR attribute_type(#deleted, :nullType))",
 
       UpdateExpression:
         "SET #status = :processing, #version = :version, " +
-        "#transcribeName = :transcribeName, #updated = :now",
+        "#transcribeName = :transcribeName, #updated = :now, #input = :input",
 
       ExpressionAttributeNames: {
         "#owner": "owner_id",
@@ -147,6 +153,8 @@ async function prepareAsrJob({
         "#version": "processing_version",
         "#transcribeName": "transcription_job_name",
         "#updated": "updated_at",
+        "#input": "input_validation",
+        "#deleted": "deleted_at",
       },
 
       ExpressionAttributeValues: {
@@ -158,6 +166,9 @@ async function prepareAsrJob({
         ":version": { S: processingVersion },
         ":transcribeName": { S: transcriptionJobName },
         ":now": { S: new Date().toISOString() },
+        ":input": { S: JSON.stringify(validation) },
+        ":empty": { S: "" },
+        ":nullType": { S: "NULL" },
       },
     })
   );
@@ -250,10 +261,10 @@ exports.handler = async (event) => {
 
       if (
         parts.length !== 4 ||
-        folder !== "videos" ||
+        folder !== (process.env.INPUT_VIDEO_PREFIX || "videos") ||
         !ownerId ||
         !jobId ||
-        !/\.mp4$/i.test(filename)
+        !filename || !/^[a-zA-Z0-9_-]+$/.test(ownerId) || !/^[a-zA-Z0-9_-]+$/.test(jobId)
       ) {
         throw new Error(`Video key khong hop le: ${key}`);
       }
@@ -262,6 +273,9 @@ exports.handler = async (event) => {
         jobId,
         ownerId,
         videoKey: key,
+        bucket,
+        eventEtag: s3Record.s3?.object?.eTag,
+        eventVersionId: s3Record.s3?.object?.versionId,
       });
 
       if (prepared.skipped) {

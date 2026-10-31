@@ -1,0 +1,1 @@
+{"updated_at":{"S":"2026-10-31T08:18:11.9861392Z"},"owner_id":{"S":"test-user"},"test_fixture":{"BOOL":true},"job_id":{"S":"input-guard-test-c2a56ca6e8174876ab4f649c98ba59f2"},"video_key":{"S":"m2-input-tests/test-user/input-guard-test-c2a56ca6e8174876ab4f649c98ba59f2/source.mp4"},"status":{"S":"UPLOADED"}}
