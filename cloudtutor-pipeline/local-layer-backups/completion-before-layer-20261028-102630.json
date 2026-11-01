@@ -1,9 +1,0 @@
-{
-    "new_layer":  "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1",
-    "handler":  "ontranscribedone.handler",
-    "backup_zip":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-layer-backups\\completion-before-layer-20261028-102630.zip",
-    "old_layers":  [
-                       null
-                   ],
-    "function_name":  "lambda-cloudtutor-test-completion-c6491b01"
-}

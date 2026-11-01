@@ -1,9 +1,0 @@
-{
-  "Records": [
-    {
-      "messageId": "bench-20-7-e53a99e6-d982-4626-a968-803d11e46308",
-      "eventSource": "aws:sqs",
-      "body": "{\"Records\":[{\"eventSource\":\"aws:s3\",\"eventName\":\"ObjectCreated:Put\",\"s3\":{\"bucket\":{\"name\":\"s3-cloudtutor-media-251929332061\"},\"object\":{\"key\":\"e2e-videos/test-user/bench-20-7-e53a99e6-d982-4626-a968-803d11e46308/source.mp4\"}}}]}"
-    }
-  ]
-}

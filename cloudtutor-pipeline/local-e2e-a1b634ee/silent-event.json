@@ -1,9 +1,0 @@
-{
-    "Records":  [
-                    {
-                        "body":  "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"s3-cloudtutor-media-251929332061\"},\"object\":{\"key\":\"e2e-videos/test-user/e2e-silent-a1b634ee/source.mp4\"}},\"eventSource\":\"aws:s3\",\"eventName\":\"ObjectCreated:Put\"}]}",
-                        "messageId":  "e2e-silent-a1b634ee",
-                        "eventSource":  "aws:sqs"
-                    }
-                ]
-}

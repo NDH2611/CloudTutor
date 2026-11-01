@@ -1,0 +1,10 @@
+
+# M2 dependencies and local artifacts
+/node_modules/
+/cloudtutor-pipeline/node_modules/
+/cloudtutor-pipeline/local-*/
+/cloudtutor-pipeline/release-artifacts/
+*.zip
+.env
+.env.*
+!.env.example
