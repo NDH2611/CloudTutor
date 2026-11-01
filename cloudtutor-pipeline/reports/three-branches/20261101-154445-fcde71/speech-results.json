@@ -1,0 +1,14 @@
+{
+  "job_id": {
+    "S": "m2-three-speech-e27353db"
+  },
+  "processing_version": {
+    "S": "b250902f-abdd-4807-828f-539420fe071e"
+  },
+  "content_source": {
+    "S": "ASR"
+  },
+  "transcript_key": {
+    "S": "results/test-user/m2-three-speech-e27353db/normalized-transcript.json"
+  }
+}

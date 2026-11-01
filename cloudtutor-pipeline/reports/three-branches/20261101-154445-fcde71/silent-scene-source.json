@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "job_id": "m2-three-silent-scene-e27353db",
+  "owner_id": "test-user",
+  "processing_version": "81cf11b0-34fe-48c4-8ca0-a7bed0241b46",
+  "source": "VISION",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_version": "vision-v2",
+  "text": "Một chú mèo vằn đang ở gần gốc cây và mặt đất.\n\nMột chú mèo vằn đang đứng sau một thân cây lớn, hướng mắt nhìn lên phía trên.\n\nMột chú mèo vằn đang đứng sát gốc cây, phía sau là bãi đất trống.",
+  "segments": [
+    {
+      "start_time": 0,
+      "end_time": 5,
+      "text": "Một chú mèo vằn đang ở gần gốc cây và mặt đất.",
+      "source": "VISION",
+      "frame_key": "frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000000.jpg"
+    },
+    {
+      "start_time": 5,
+      "end_time": 10,
+      "text": "Một chú mèo vằn đang đứng sau một thân cây lớn, hướng mắt nhìn lên phía trên.",
+      "source": "VISION",
+      "frame_key": "frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000001.jpg"
+    },
+    {
+      "start_time": 10,
+      "end_time": 11.978,
+      "text": "Một chú mèo vằn đang đứng sát gốc cây, phía sau là bãi đất trống.",
+      "source": "VISION",
+      "frame_key": "frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000002.jpg"
+    }
+  ],
+  "selected_frame_count": 3,
+  "frame_interval_seconds": 5,
+  "duration_seconds": 11.978,
+  "usage": [
+    {
+      "frame_key": "frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000000.jpg",
+      "usage": {
+        "promptTokenCount": 1232,
+        "candidatesTokenCount": 31,
+        "totalTokenCount": 1263,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 132
+          },
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1100
+          }
+        ],
+        "serviceTier": "standard"
+      }
+    },
+    {
+      "frame_key": "frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000001.jpg",
+      "usage": {
+        "promptTokenCount": 1232,
+        "candidatesTokenCount": 37,
+        "totalTokenCount": 1269,
+        "promptTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1100
+          },
+          {
+            "modality": "TEXT",
+            "tokenCount": 132
+          }
+        ],
+        "serviceTier": "standard"
+      }
+    },
+    {
+      "frame_key": "frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000002.jpg",
+      "usage": {
+        "promptTokenCount": 1232,
+        "candidatesTokenCount": 36,
+        "totalTokenCount": 1268,
+        "promptTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1100
+          },
+          {
+            "modality": "TEXT",
+            "tokenCount": 132
+          }
+        ],
+        "serviceTier": "standard"
+      }
+    }
+  ],
+  "warnings": [
+    "AI_GENERATED_VISUAL_DESCRIPTION",
+    "VISION_TIMESTAMPS_ARE_SAMPLED",
+    "VISION_CONTENT_FROM_SELECTED_FRAMES_ONLY"
+  ]
+}

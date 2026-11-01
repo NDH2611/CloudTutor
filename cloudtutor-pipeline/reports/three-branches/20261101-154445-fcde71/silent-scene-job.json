@@ -1,0 +1,41 @@
+{
+  "updated_at": {
+    "S": "2026-11-01T08:45:50.847Z"
+  },
+  "input_validation": {
+    "S": "{\"skipped\":false,\"content_length\":605689,\"etag\":\"\\\"06a333a8e83fff79f852c573fc2e5b4c\\\"\",\"version_id\":null,\"content_type\":\"video/mp4\",\"major_brand\":\"isom\",\"container_check\":\"FTYP_ONLY\",\"checked_at\":\"2026-11-01T08:45:21.343Z\"}"
+  },
+  "processing_version": {
+    "S": "81cf11b0-34fe-48c4-8ca0-a7bed0241b46"
+  },
+  "created_at": {
+    "S": "2026-11-01T08:45:17.231Z"
+  },
+  "test_fixture": {
+    "BOOL": true
+  },
+  "transcription_job_name": {
+    "S": "transcribe-cloudtutor-m2-three-silent-scene-e27353db-81cf11b0-34fe-48c4-8ca0-a7bed0241b46"
+  },
+  "vision_handoff_state": {
+    "S": "SENT"
+  },
+  "vision_mediaconvert_job_id": {
+    "S": "1793522739310-0uihwy"
+  },
+  "job_id": {
+    "S": "m2-three-silent-scene-e27353db"
+  },
+  "owner_id": {
+    "S": "test-user"
+  },
+  "status": {
+    "S": "PROCESSING_AI"
+  },
+  "video_key": {
+    "S": "videos/test-user/m2-three-silent-scene-e27353db/source.mp4"
+  },
+  "ocr_mediaconvert_job_id": {
+    "S": "1793522739310-0uihwy"
+  }
+}

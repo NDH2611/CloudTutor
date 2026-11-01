@@ -1,0 +1,20 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]1925127d57c1458f9e50a609e15a4e0f",
+      "timestamp": 1793522738959,
+      "message": "2026-11-01T08:45:38.959Z\t2224cc20-abb5-4e32-836e-4533694b9b78\tINFO\tDa luu ket qua: results/test-user/m2-three-silent-scene-e27353db\n",
+      "ingestionTime": 1793522747528,
+      "eventId": "39996893609295411441212406511442575940376459931268415489"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]1925127d57c1458f9e50a609e15a4e0f",
+      "timestamp": 1793522739636,
+      "message": "2026-11-01T08:45:39.636Z\t2224cc20-abb5-4e32-836e-4533694b9b78\tINFO\tDa khoi dong OCR fallback: {\n  job_id: 'm2-three-silent-scene-e27353db',\n  mediaconvert_job_id: '1793522739310-0uihwy',\n  frame_interval_seconds: 5\n}\n",
+      "ingestionTime": 1793522747528,
+      "eventId": "39996893624393015940617638378262257210959400670817157124"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jConBDOd0WJVJ798O4iNY7aIVpuuWgdaIMLnd9Nxnt1tW-bgnuf9SlnucB_lcBiKc12iXhLzmSkWYUR_npBiYtEGRU4iMCV8Z8-ztc0ANy-oUCmvRz6E16JzCwDN29QaSde2BkNJFGhszGrvchp2XrtthaMJZ2RdQv-vUBHWe82Z1r0rL1rOC1tNigVMUitqobuvF-irBssDXfpReX5gqa6J705bUdhtUjp-jc5X-ZD7jWrpmxJkr0xHZBlemaNDXJyAE9eWmoR9mZYwtfMoN__NzaGYl6781TWWPbb9SaIB4VfOgz8exSFsk2R1K5sY7L4"
+}

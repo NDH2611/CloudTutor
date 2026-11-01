@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]958867eab70742258162d92862dac2a1",
+      "timestamp": 1793522719967,
+      "message": "2026-11-01T08:45:19.967Z\tb5ab4133-6261-5137-84a9-22539c2b0a5c\tINFO\tDa bat dau Transcribe: transcribe-cloudtutor-m2-three-speech-e27353db-b250902f-abdd-4807-828f-539420fe071e\n",
+      "ingestionTime": 1793522721072,
+      "eventId": "39996893185759658630718811775412953744002830518570516482"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jCqVrhd6zxY0D0w3WjEBPw7qcxSBO94OFHFge83SL_vjrSvTW2eLluxdgSPMhseXtOUepSObB3BwlYaaKWjFlBA9Pi1cQE_dtkl4Nuv157fj_fZmIg1rj3iim6w_eEjcRVUkP4rOqBSYN898l9LF9hiZZNDO8fl-TD-Yk3--bvxubMf2dSWSgCuPD6VHUaZeCfSAodhU3vcNEf7vuYRuWb4omZv5UgEXCPB4JXhiE_aG4R_ji_hkvxb2bLyAmmGo6G0d19suvuWn4__DirFuWSrR_VxYhako9UL6S9csMxeHH1IPnTT7Lx6VukpRbkqyR4U"
+}
