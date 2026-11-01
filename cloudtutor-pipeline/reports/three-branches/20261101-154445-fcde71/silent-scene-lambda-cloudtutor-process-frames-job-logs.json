@@ -1,0 +1,27 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522743785,
+      "message": "2026-11-01T08:45:43.785Z\tbc0ff8f5-9bfe-4bf3-ab28-373d9deb7ba4\tINFO\tDa luu OCR: results/test-user/m2-three-silent-scene-e27353db\n",
+      "ingestionTime": 1793522751652,
+      "eventId": "39996893716918807769321193797479664489464381618272403458"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522743949,
+      "message": "2026-11-01T08:45:43.949Z\tbc0ff8f5-9bfe-4bf3-ab28-373d9deb7ba4\tINFO\tDa gui yeu cau Vision: {\n  job_id: 'm2-three-silent-scene-e27353db',\n  processing_version: '81cf11b0-34fe-48c4-8ca0-a7bed0241b46',\n  message_id: '4ded1d51-a0f7-4690-ad29-fd3e47d9b552'\n}\n",
+      "ingestionTime": 1793522751652,
+      "eventId": "39996893720576129981880215992691522286178712905253191685"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522743949,
+      "message": "2026-11-01T08:45:43.949Z\tbc0ff8f5-9bfe-4bf3-ab28-373d9deb7ba4\tINFO\tKet qua chuyen Vision: {\n  skipped: false,\n  job_id: 'm2-three-silent-scene-e27353db',\n  message_id: '4ded1d51-a0f7-4690-ad29-fd3e47d9b552'\n}\n",
+      "ingestionTime": 1793522751652,
+      "eventId": "39996893720576129981880215992691522286178712905253191686"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jCpE-C56Y24Dw2L7T7kKoiC-kMAjobfhuO82tO7mWP9OhnQFZyF2Gn-yk6-xzRYOIw8h3pPryh0r64qMRVcQUpldnX3ypRJ2x6ZLTDlUM8qlr69d1HFPhVvIcY62CVPJWV0YmR_iokLSFQhvauQq3ZiK8ESJncYBMBvKKtqXcpPilZ_q5S6UcaEp3GAM8KoeBJB-uxrDNtHwgwbv126nXzih1Z6JqjpPnNQCnS1wJePhxsKLP7BSxN12nODFBThq_u00XiiF9X5BM35mvIaPn1JZjR_vTL8uRdv9OgMKf6HpPg"
+}

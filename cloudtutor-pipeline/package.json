@@ -1,21 +1,23 @@
 {
-  "name": "cloudtutor-pipeline",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1157.0",
-    "@aws-sdk/client-mediaconvert": "^3.1152.0",
-    "@aws-sdk/client-rekognition": "^3.1149.0",
-    "@aws-sdk/client-s3": "^3.1149.0",
-    "@aws-sdk/client-sqs": "^3.1151.0",
-    "@aws-sdk/client-transcribe": "^3.1146.0"
-  }
+    "name":  "cloudtutor-pipeline",
+    "version":  "1.0.0",
+    "description":  "",
+    "main":  "index.js",
+    "scripts":  {
+                    "test":  "node runLocalTests.js"
+                },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "type":  "commonjs",
+    "dependencies":  {
+                         "@aws-sdk/client-dynamodb":  "^3.1157.0",
+                         "@aws-sdk/client-mediaconvert":  "^3.1152.0",
+                         "@aws-sdk/client-rekognition":  "^3.1149.0",
+                         "@aws-sdk/client-s3":  "^3.1149.0",
+                         "@aws-sdk/client-sqs":  "^3.1151.0",
+                         "@aws-sdk/client-transcribe":  "^3.1146.0"
+                     }
 }

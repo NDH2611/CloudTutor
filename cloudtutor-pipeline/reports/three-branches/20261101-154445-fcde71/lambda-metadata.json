@@ -1,0 +1,54 @@
+[
+  {
+    "Name": "lambda-cloudtutor-start-transcription",
+    "Runtime": "nodejs22.x",
+    "Handler": "index.handler",
+    "State": "Active",
+    "Update": "Successful",
+    "Bucket": "s3-cloudtutor-media-251929332061",
+    "AiQueue": null,
+    "CodeHash": "zMFNxX3+hJf5B1Swip1HMAHhrCJN7Wd3JeCgTmv+gUM=",
+    "Layers": [
+      "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"
+    ]
+  },
+  {
+    "Name": "lambda-cloudtutor-transcription-completed",
+    "Runtime": "nodejs22.x",
+    "Handler": "ontranscribedone.handler",
+    "State": "Active",
+    "Update": "Successful",
+    "Bucket": "s3-cloudtutor-media-251929332061",
+    "AiQueue": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-ai-generation",
+    "CodeHash": "UsnOz1rs9FnqNrDmygT9oTnU0WhyYLHuyo/9/jtDn+E=",
+    "Layers": [
+      "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"
+    ]
+  },
+  {
+    "Name": "lambda-cloudtutor-process-frames",
+    "Runtime": "nodejs22.x",
+    "Handler": "onFramesReady.handler",
+    "State": "Active",
+    "Update": "Successful",
+    "Bucket": "s3-cloudtutor-media-251929332061",
+    "AiQueue": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-ai-generation",
+    "CodeHash": "uF1SK3DdJqFqBH6FOm1g0Tfc1TlOqz6cVum+MpvyJNU=",
+    "Layers": [
+      "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"
+    ]
+  },
+  {
+    "Name": "lambda-cloudtutor-vision-fallback",
+    "Runtime": "nodejs22.x",
+    "Handler": "onVisionFallback.handler",
+    "State": "Active",
+    "Update": "Successful",
+    "Bucket": "s3-cloudtutor-media-251929332061",
+    "AiQueue": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-handoff-test-fb713c6d",
+    "CodeHash": "Kf/A2OJqQX777lTF5K1t5qvrRjbiwPWAl471YK2AFMM=",
+    "Layers": [
+      "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:2"
+    ]
+  }
+]

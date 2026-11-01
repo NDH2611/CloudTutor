@@ -1,9 +1,0 @@
-{
-    "new_layer":  "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1",
-    "handler":  "onVisionFallback.handler",
-    "backup_zip":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-layer-backups\\vision-before-layer-20261028-102117.zip",
-    "old_layers":  [
-                       null
-                   ],
-    "function_name":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
-}

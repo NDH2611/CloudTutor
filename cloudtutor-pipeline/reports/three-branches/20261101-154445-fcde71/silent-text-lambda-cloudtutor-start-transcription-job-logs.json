@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]29ed1ad7b7744bfd8d460c149c9a1999",
+      "timestamp": 1793522719785,
+      "message": "2026-11-01T08:45:19.785Z\tac05cdea-1247-5299-8526-ae8aec11d392\tINFO\tDa bat dau Transcribe: transcribe-cloudtutor-m2-three-silent-text-e27353db-d4189893-4a90-45d8-910b-45d87e25d8e3\n",
+      "ingestionTime": 1793522722355,
+      "eventId": "39996893181700923004586238365204409874992869904084697090"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jCqVrhd6zxY0D0w3WjEBPw7qLuuOWoLsKltp4Tzq0xfTU_RsQNrkXO_zNVqLmQuCEE68SYyQEqBub9y9K_z3kM3HTnaGwYbwbIsYl4w-PuP5IWIGuLZkHYpuq28yQ74zgTp5HIaHJnPz5pmMMEU8hjf0LhLWrXNAz891Z4tgZcSQi6y3VDkC-rq7-nnXKNxuGtYS7d-iLy0acNmM5FQB8w2LycWYQ1l-_gUQZxg0i7alm-a1z4lOGpYuhoWt4Qxt8jHhblrHbB_el-oakgC6vCUWN9eULYUx_M8ac9xnzlxU3MrVxDjcu768oIwUuPbRn5M"
+}

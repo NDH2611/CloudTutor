@@ -1,0 +1,62 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522745121,
+      "message": "2026-11-01T08:45:45.121Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDang xu ly frame: frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000000.jpg\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893746712603354558106316433000565823569537122631683"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522747194,
+      "message": "2026-11-01T08:45:47.194Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDang xu ly frame: frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000001.jpg\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893792942048151112088088836544545023622939020034057"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522748720,
+      "message": "2026-11-01T08:45:48.720Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDang xu ly frame: frames/test-user/m2-three-silent-scene-e27353db/source_frame.0000002.jpg\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893826972985324069819002820050629085022597146148879"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522750732,
+      "message": "2026-11-01T08:45:50.732Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDa luu file Vision moi: results/test-user/m2-three-silent-scene-e27353db/vision-cache-v81cf11b0-34fe-48c4-8ca0-a7bed0241b46.json\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893871842084663513432763589915793653525947178745877"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522750780,
+      "message": "2026-11-01T08:45:50.780Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDa tao checkpoint Vision: {\n  job_id: 'm2-three-silent-scene-e27353db',\n  status: 'PROCESSING_AI',\n  vision_handoff_state: 'PENDING',\n  transcript_key: 'results/test-user/m2-three-silent-scene-e27353db/vision-cache-v81cf11b0-34fe-48c4-8ca0-a7bed0241b46.json'\n}\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893872912520433042902674383630270740647299465805846"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522750847,
+      "message": "2026-11-01T08:45:50.847Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDa gui cong viec AI: {\n  job_id: 'm2-three-silent-scene-e27353db',\n  handoff_id: 'test-user/m2-three-silent-scene-e27353db/v81cf11b0-34fe-48c4-8ca0-a7bed0241b46',\n  message_id: '84919b86-8479-4a26-928c-03a39e5e911e',\n  transcript_key: 'results/test-user/m2-three-silent-scene-e27353db/vision-cache-v81cf11b0-34fe-48c4-8ca0-a7bed0241b46.json'\n}\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893874406670361344454424866523395008087520366493719"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522750853,
+      "message": "2026-11-01T08:45:50.853Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tDa xu ly ban giao Vision: {\n  job_id: 'm2-three-silent-scene-e27353db',\n  handoff_state: 'SENT',\n  already_sent: false,\n  message_id: '84919b86-8479-4a26-928c-03a39e5e911e'\n}\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893874540474832535638163715737704643977689402376216"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]0f948391f78b4a1ea29dffd7ffb061f4",
+      "timestamp": 1793522750862,
+      "message": "2026-11-01T08:45:50.862Z\t73e53942-4520-530c-97ab-5a22bb471447\tINFO\tKet qua xu ly message Vision: {\n  message_id: '4ded1d51-a0f7-4690-ad29-fd3e47d9b552',\n  job_id: 'm2-three-silent-scene-e27353db',\n  skipped: false,\n  reason: null,\n  output_key: 'results/test-user/m2-three-silent-scene-e27353db/vision-cache-v81cf11b0-34fe-48c4-8ca0-a7bed0241b46.json'\n}\n",
+      "ingestionTime": 1793522753192,
+      "eventId": "39996893874741181539322413771989559169097812942956199961"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jCrfnsu9saOVKhnRgx05WVypk6O6Fdnr4JDSdkm6JSzmf0pz-I5__0oJ9RpoMVoUhoaYebxOw2pRLA4C9ENwpptSwsuxFzBlZvsAYHxOa0cSofuTaIi-3ShQzNseig0WjDS9zZWK1MmYKkaLh6Of_BvJTZxG52gmxjVCIiL3QuLj1DS43UtydivwOy-wa37Tb73BPZBqfJuJFWeYnH7Vdaj9vfltK0uHCh03KjmjjKASdixX7P7HAG_Cadf4oSVQrJb0GADh0sjB8hf0ig1X7rr9anjB4c3m9vImaIpUF8AA5Nj86qcLYkYWTZ-XtVH7Fnk"
+}

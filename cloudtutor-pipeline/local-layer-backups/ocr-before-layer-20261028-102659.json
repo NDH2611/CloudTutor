@@ -1,9 +1,0 @@
-{
-    "new_layer":  "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1",
-    "handler":  "onFramesReady.handler",
-    "backup_zip":  "C:\\CloudTutor\\cloudtutor-pipeline\\local-layer-backups\\ocr-before-layer-20261028-102659.zip",
-    "old_layers":  [
-                       null
-                   ],
-    "function_name":  "lambda-cloudtutor-test-ocr-c6491b01"
-}

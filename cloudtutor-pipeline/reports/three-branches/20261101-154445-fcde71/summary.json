@@ -1,0 +1,35 @@
+{
+  "scope": "REAL_MAIN_S3_NOTIFICATION_TO_M2_SOURCE_AND_SQS_HANDOFF_NOT_M3_ACCEPTANCE",
+  "cases": [
+    {
+      "case": "speech",
+      "expected": "ASR",
+      "actual": "ASR",
+      "verdict": "M2_PASS",
+      "area": "M2_SOURCE_AND_HANDOFF",
+      "status": "FAILED",
+      "error": "GENERATE_SUMMARY_ERROR: Lỗi khi tạo summary bằng AI - 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Ple",
+      "job_id": "m2-three-speech-e27353db"
+    },
+    {
+      "case": "silent-text",
+      "expected": "OCR",
+      "actual": "OCR",
+      "verdict": "M2_PASS",
+      "area": "M2_SOURCE_AND_HANDOFF",
+      "status": "PROCESSING_AI",
+      "error": "-",
+      "job_id": "m2-three-silent-text-e27353db"
+    },
+    {
+      "case": "silent-scene",
+      "expected": "VISION",
+      "actual": "VISION",
+      "verdict": "M2_PASS",
+      "area": "M2_SOURCE_AND_HANDOFF",
+      "status": "PROCESSING_AI",
+      "error": "-",
+      "job_id": "m2-three-silent-scene-e27353db"
+    }
+  ]
+}

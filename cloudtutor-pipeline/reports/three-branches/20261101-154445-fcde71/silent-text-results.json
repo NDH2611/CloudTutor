@@ -1,0 +1,14 @@
+{
+  "processing_version": {
+    "S": "d4189893-4a90-45d8-910b-45d87e25d8e3"
+  },
+  "content_source": {
+    "S": "OCR"
+  },
+  "job_id": {
+    "S": "m2-three-silent-text-e27353db"
+  },
+  "transcript_key": {
+    "S": "results/test-user/m2-three-silent-text-e27353db/normalized-ocr.json"
+  }
+}

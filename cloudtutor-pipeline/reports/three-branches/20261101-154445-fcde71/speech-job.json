@@ -1,0 +1,38 @@
+{
+  "input_validation": {
+    "S": "{\"skipped\":false,\"content_length\":151338,\"etag\":\"\\\"03a1b86ccf6de4e68dde179a99889600\\\"\",\"version_id\":null,\"content_type\":\"video/mp4\",\"major_brand\":\"isom\",\"container_check\":\"FTYP_ONLY\",\"checked_at\":\"2026-11-01T08:45:19.743Z\"}"
+  },
+  "test_fixture": {
+    "BOOL": true
+  },
+  "status": {
+    "S": "FAILED"
+  },
+  "processing_version": {
+    "S": "b250902f-abdd-4807-828f-539420fe071e"
+  },
+  "transcription_job_name": {
+    "S": "transcribe-cloudtutor-m2-three-speech-e27353db-b250902f-abdd-4807-828f-539420fe071e"
+  },
+  "text_handoff_state": {
+    "S": "SENT"
+  },
+  "job_id": {
+    "S": "m2-three-speech-e27353db"
+  },
+  "updated_at": {
+    "S": "2026-11-01T08:45:41.551475"
+  },
+  "video_key": {
+    "S": "videos/test-user/m2-three-speech-e27353db/source.mp4"
+  },
+  "error_code": {
+    "S": "GENERATE_SUMMARY_ERROR: Lỗi khi tạo summary bằng AI - 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Ple"
+  },
+  "owner_id": {
+    "S": "test-user"
+  },
+  "created_at": {
+    "S": "2026-11-01T08:45:16.071Z"
+  }
+}

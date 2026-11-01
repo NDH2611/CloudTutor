@@ -1,0 +1,14 @@
+{
+  "job_id": {
+    "S": "m2-three-silent-scene-e27353db"
+  },
+  "content_source": {
+    "S": "VISION"
+  },
+  "processing_version": {
+    "S": "81cf11b0-34fe-48c4-8ca0-a7bed0241b46"
+  },
+  "transcript_key": {
+    "S": "results/test-user/m2-three-silent-scene-e27353db/vision-cache-v81cf11b0-34fe-48c4-8ca0-a7bed0241b46.json"
+  }
+}
