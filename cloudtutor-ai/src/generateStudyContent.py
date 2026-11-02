@@ -26,7 +26,6 @@ def _clean_json_response(response_text: str) -> Dict[str, Any]:
 def _call_bedrock(full_prompt: str, region_name: str, model_id: str) -> Dict[str, Any]:
     logger.info("Using Amazon Bedrock (model: %s) to generate Summary and Quiz...", model_id)
     client = boto3.client("bedrock-runtime", region_name=region_name)
-    
     response = client.converse(
         modelId=model_id,
         messages=[
@@ -64,10 +63,16 @@ def _call_gemini(full_prompt: str, model_name: str) -> Dict[str, Any]:
 
 def generate_study_content(
     chunk_data: Dict[str, Any], 
-    bedrock_model_id: str = "apac.amazon.nova-lite-v1:0",
+    bedrock_model_id: str = None,
     bedrock_region: str = "ap-southeast-1",
-    gemini_model_name: str = "gemini-3.6-flash"
+    gemini_model_name: str = None
 ) -> Dict[str, Any]:
+
+    if not gemini_model_name:
+        gemini_model_name = os.environ.get("GEMINI_MODEL_ID")
+    
+    if not bedrock_model_id:
+        bedrock_model_id = os.environ.get("BEDROCK_MODEL_ID")
 
     job_id = chunk_data.get("job_id", "")
     owner_id = chunk_data.get("owner_id", "")
@@ -95,24 +100,19 @@ def generate_study_content(
     
     result_json = None
     
-    # 3. Ưu tiên gọi Bedrock trước
+    # 3. Ưu tiên gọi Gemini trước
     try:
-        result_json = _call_bedrock(full_prompt, region_name=bedrock_region, model_id=bedrock_model_id)
-        logger.info("Generate Summary and Quiz by Amazon Bedrock succeed.")
+        result_json = _call_gemini(full_prompt, model_name=gemini_model_name)
+        logger.info("Generate Summary and Quiz by Gemini succeed.")
         return result_json
-        
-    except (ClientError, Exception) as e:  # <-- Đã sửa lỗi cú pháp ở đây
-        logger.warning(f"Generate Summary and Quiz by Amazon Bedrock failed ({e}). Changed to fallback Gemini...")
-        
-        # 4. Fallback sang Gemini nếu Bedrock gặp lỗi
+    except (json.JSONDecodeError, Exception) as e:  
+        logger.warning(f"Generate Summary and Quiz by Gemini failed ({e}). Changed to fallback Amazon Bedrock...")
+        # 4. Fallback sang Bedrock nếu Gemini gặp lỗi
         try:
-            result_json = _call_gemini(full_prompt, model_name=gemini_model_name)
-            logger.info("Generate Summary and Quiz by Gemini Fallback succeed.")
+            result_json = _call_bedrock(full_prompt, region_name=bedrock_region, model_id=bedrock_model_id)
+            logger.info("Generate Summary and Quiz by Amazon Bedrock Fallback succeed.")
             return result_json
             
-        except json.JSONDecodeError as json_err:
-            logger.error(f"Error parse JSON from Gemini fallback: {json_err}")
-            raise json_err
-        except Exception as gemini_err:
-            logger.error(f"Both Bedrock and Gemini failed. Gemini failed: {gemini_err}")
-            raise gemini_err
+        except Exception as bedrock_err:
+            logger.error(f"Both Gemini and Bedrock failed. Bedrock failed: {bedrock_err}")
+            raise bedrock_err
