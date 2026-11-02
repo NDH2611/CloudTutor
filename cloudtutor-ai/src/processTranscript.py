@@ -1,3 +1,5 @@
+# trong lambda file này sử dụng tên lamda_function.py 
+
 import json
 import logging
 import os
