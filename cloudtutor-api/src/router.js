@@ -15,6 +15,8 @@ const {
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
+const SHARE_DAYS = 7;
+const sha256 = (s) => crypto.createHash("sha256").update(s).digest("hex");
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -214,8 +216,91 @@ async function deleteJob(jobId, owner) {
   return res(200, { job_id: jobId, status: "DELETED" });
 }
 
+async function createShare(jobId, owner) {
+  const job = await getOwnedJob(jobId, owner);
+  if (!job) return res(404, { error: "NOT_FOUND" });
+  if (!["COMPLETED", "COMPLETED_WITH_WARNING"].includes(job.status))
+    return res(409, { error: "JOB_NOT_READY" });
+  const token = crypto.randomBytes(32).toString("base64url");
+  const expiresAt = new Date(
+    Date.now() + SHARE_DAYS * 86400 * 1000,
+  ).toISOString();
+  await ddb.send(
+    new UpdateCommand({
+      TableName: JOBS,
+      Key: { job_id: jobId },
+      UpdateExpression:
+        "SET share_token_hash = :h, share_expires_at = :e, updated_at = :t",
+      ExpressionAttributeValues: {
+        ":h": sha256(token),
+        ":e": expiresAt,
+        ":t": new Date().toISOString(),
+      },
+    }),
+  );
+  return res(200, { share_token: token, expires_at: expiresAt });
+}
+
+async function revokeShare(jobId, owner) {
+  const job = await getOwnedJob(jobId, owner);
+  if (!job) return res(404, { error: "NOT_FOUND" });
+  await ddb.send(
+    new UpdateCommand({
+      TableName: JOBS,
+      Key: { job_id: jobId },
+      UpdateExpression:
+        "REMOVE share_token_hash, share_expires_at SET updated_at = :t",
+      ExpressionAttributeValues: { ":t": new Date().toISOString() },
+    }),
+  );
+  return res(200, { job_id: jobId, shared: false });
+}
+
+async function getPublicShare(token) {
+  if (!token || token.length < 20) return res(404, { error: "NOT_FOUND" });
+  const q = await ddb.send(
+    new QueryCommand({
+      TableName: JOBS,
+      IndexName: "share-token-hash-index",
+      KeyConditionExpression: "share_token_hash = :h",
+      ExpressionAttributeValues: { ":h": sha256(token) },
+      Limit: 1,
+    }),
+  );
+  const job = q.Items?.[0];
+  if (
+    !job ||
+    !job.share_expires_at ||
+    new Date(job.share_expires_at) < new Date() ||
+    ["DELETING", "DELETED"].includes(job.status) ||
+    !["COMPLETED", "COMPLETED_WITH_WARNING"].includes(job.status)
+  )
+    return res(404, { error: "NOT_FOUND" }); // gộp mọi lý do thành 404, không lộ thông tin
+  const { Item: r } = await ddb.send(
+    new GetCommand({ TableName: RESULTS, Key: { job_id: job.job_id } }),
+  );
+  const prefix = `results/${job.owner_id}/${job.job_id}/`;
+  return res(200, {
+    original_filename: job.original_filename,
+    warnings: job.warnings || [],
+    content_source: r?.content_source || null,
+    transcript: await readJson(r?.transcript_key || prefix + "transcript.json"),
+    chunks: await readJson(r?.chunks_key || prefix + "chunks.json"),
+    summary: await readJson(r?.summary_key || prefix + "summary.json"),
+    quiz: await readJson(r?.quiz_key || prefix + "quiz.json"),
+    video_url: await getSignedUrl(
+      s3,
+      new GetObjectCommand({ Bucket: BUCKET, Key: job.video_key }),
+      { expiresIn: URL_TTL },
+    ),
+  });
+}
+
 exports.handler = async (e) => {
   try {
+    if (e.routeKey === "GET /public/share/{token}")
+      return await getPublicShare(e.pathParameters?.token);
+
     const owner = ownerOf(e);
     if (!owner) return res(401, { error: "UNAUTHORIZED" });
     const id = e.pathParameters?.id;
@@ -228,6 +313,10 @@ exports.handler = async (e) => {
         return await getJob(id, owner);
       case "DELETE /jobs/{id}":
         return await deleteJob(id, owner);
+      case "POST /jobs/{id}/share":
+        return await createShare(id, owner);
+      case "DELETE /jobs/{id}/share":
+        return await revokeShare(id, owner);
       default:
         return res(404, { error: "ROUTE_NOT_FOUND" });
     }
