@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getJobDetail } from '../api/jobs';
+import { getJobDetail, getPublicShareDetail } from '../api/jobs';
+import { ShareModal } from '../components/ShareModal';
 import {
   ArrowLeft,
   RefreshCw,
@@ -24,17 +25,23 @@ import {
   RotateCcw,
   Search,
   Check,
-  Cpu
+  Cpu,
+  Share2
 } from 'lucide-react';
 
-export function VideoDetailPage() {
-  const { id: jobId } = useParams();
+export function VideoDetailPage({ isPublicShare = false }) {
+  const { id: jobIdParam, token: shareTokenParam } = useParams();
   const { idToken } = useAuth();
+
+  const isPublic = Boolean(isPublicShare || shareTokenParam);
+  const shareToken = shareTokenParam;
+  const jobId = isPublic ? null : jobIdParam;
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('transcript'); // 'transcript' | 'summary' | 'quiz'
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Video Player state
   const videoRef = useRef(null);
@@ -46,19 +53,49 @@ export function VideoDetailPage() {
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  // Stepper collapsed state for completed jobs
-  const [showCompletedStepper, setShowCompletedStepper] = useState(false);
+  // Save to recent lecture whenever job data is successfully loaded
+  useEffect(() => {
+    if (job && (jobId || shareToken)) {
+      const lectureInfo = {
+        id: jobId || `share/${shareToken}`,
+        title: job.original_filename || job.file_name || 'Bài giảng đang xem'
+      };
+      try {
+        localStorage.setItem('cloudtutor_recent_lecture', JSON.stringify(lectureInfo));
+        window.dispatchEvent(new CustomEvent('cloudtutor:recent_lecture_updated', { detail: lectureInfo }));
+      } catch (e) {
+        console.warn('Failed to save recent lecture:', e);
+      }
+    }
+  }, [job, jobId, shareToken]);
 
-  // Load / Polling function
+  // Load detail function
   const loadDetail = async (showLoadingSpinner = false) => {
     if (showLoadingSpinner) setLoading(true);
     try {
-      const data = await getJobDetail(jobId, idToken);
-      setJob(data);
+      if (isPublic) {
+        const data = await getPublicShareDetail(shareToken);
+        setJob({
+          ...data,
+          status: 'COMPLETED',
+          isPublicView: true
+        });
+      } else {
+        const data = await getJobDetail(jobId, idToken);
+        setJob(data);
+      }
       setError('');
     } catch (err) {
-      console.error('Failed to load job detail:', err);
-      setError(err.response?.data?.error || err.message || 'Không thể tải chi tiết bài giảng');
+      console.error('Failed to load detail:', err);
+      if (isPublic) {
+        setError(
+          err.response?.status === 404 || err.message === 'NOT_FOUND'
+            ? 'Liên kết chia sẻ bài giảng đã hết hạn hoặc không tồn tại.'
+            : (err.response?.data?.error || err.message || 'Không thể tải bài giảng chia sẻ')
+        );
+      } else {
+        setError(err.response?.data?.error || err.message || 'Không thể tải chi tiết bài giảng');
+      }
     } finally {
       if (showLoadingSpinner) setLoading(false);
     }
@@ -67,11 +104,11 @@ export function VideoDetailPage() {
   // Initial load
   useEffect(() => {
     loadDetail(true);
-  }, [jobId]);
+  }, [jobId, shareToken, isPublic]);
 
-  // Smart Short Polling: Automatically poll every 3.5s if job is in active processing states
+  // Smart Short Polling: Automatically poll every 3.5s if job is in active processing states (only in owner mode)
   useEffect(() => {
-    if (!job) return;
+    if (isPublic || !job) return;
     const isTerminal = ['COMPLETED', 'COMPLETED_WITH_WARNING', 'FAILED', 'DELETED', 'DELETING'].includes(job.status);
     if (isTerminal) return;
 
@@ -80,15 +117,18 @@ export function VideoDetailPage() {
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [job?.status, jobId]);
+  }, [isPublic, job?.status, jobId]);
 
   // Catch Video Player error (e.g. S3 presigned URL expired after 15 minutes) and renew seamlessly
   const handleVideoError = async () => {
-    console.warn('Video URL may have expired or failed to stream. Fetching fresh presigned URL from API Gateway...');
+    console.warn('Video URL may have expired or failed to stream. Fetching fresh presigned URL...');
     const savedTime = videoRef.current?.currentTime || 0;
     try {
-      const updated = await getJobDetail(jobId, idToken);
-      setJob(updated);
+      const updated = isPublic
+        ? await getPublicShareDetail(shareToken)
+        : await getJobDetail(jobId, idToken);
+
+      setJob((prev) => ({ ...prev, ...updated }));
       if (videoRef.current && updated.video_url) {
         videoRef.current.src = updated.video_url;
         videoRef.current.currentTime = savedTime;
@@ -138,44 +178,16 @@ export function VideoDetailPage() {
     }
   };
 
-  // Stepper calculations for in-progress pipeline
-  const getStepStatus = (stepIndex) => {
-    if (!job) return 'upcoming';
-    const status = job.status;
-
-    // Steps: 0: Ingest, 1: Transcribe/OCR, 2: AI Processing, 3: Completed
-    if (status === 'COMPLETED' || status === 'COMPLETED_WITH_WARNING') return 'completed';
-    if (status === 'FAILED') {
-      return stepIndex === 3 ? 'failed' : 'completed';
-    }
-
-    if (stepIndex === 0) {
-      if (['CREATED', 'UPLOADING'].includes(status)) return 'current';
-      return 'completed'; // UPLOADED, QUEUED, etc.
-    }
-    if (stepIndex === 1) {
-      if (['CREATED', 'UPLOADING'].includes(status)) return 'upcoming';
-      if (['UPLOADED', 'QUEUED', 'TRANSCRIBING', 'SUBMITTED', 'PROCESSING_OCR', 'EXTRACTING_FRAMES'].includes(status)) return 'current';
-      return 'completed'; // PROCESSING_AI or later
-    }
-    if (stepIndex === 2) {
-      if (status === 'PROCESSING_AI') return 'current';
-      if (['COMPLETED', 'COMPLETED_WITH_WARNING'].includes(status)) return 'completed';
-      return 'upcoming';
-    }
-    if (stepIndex === 3) {
-      if (['COMPLETED', 'COMPLETED_WITH_WARNING'].includes(status)) return 'completed';
-      return 'upcoming';
-    }
-    return 'upcoming';
-  };
-
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 text-center">
         <RefreshCw className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-slate-800">Đang đồng bộ dữ liệu bài giảng từ AWS...</h2>
-        <p className="text-sm text-slate-500 mt-2">Truy vấn trạng thái DynamoDB và kết quả học liệu S3.</p>
+        <h2 className="text-xl font-bold text-slate-800">
+          {isPublic ? 'Đang tải bài giảng được chia sẻ...' : 'Đang đồng bộ dữ liệu bài giảng từ AWS...'}
+        </h2>
+        <p className="text-sm text-slate-500 mt-2">
+          {isPublic ? 'Đang truy vấn nội dung công khai từ CloudTutor API Gateway.' : 'Truy vấn trạng thái DynamoDB và kết quả học liệu S3.'}
+        </p>
       </div>
     );
   }
@@ -184,15 +196,21 @@ export function VideoDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-slate-900">Không tìm thấy bài giảng</h2>
-        <p className="text-sm text-slate-500 mt-2">{error || 'Bài giảng không tồn tại hoặc bạn không có quyền truy cập.'}</p>
-        <Link
-          to="/videos"
-          className="inline-flex items-center gap-2 mt-6 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Quay lại Thư viện</span>
-        </Link>
+        <h2 className="text-xl font-bold text-slate-900">
+          {isPublic ? 'Liên kết chia sẻ không khả dụng' : 'Không tìm thấy bài giảng'}
+        </h2>
+        <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
+          {error || 'Bài giảng không tồn tại hoặc bạn không có quyền truy cập.'}
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Link
+            to={idToken ? '/videos' : '/login'}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>{idToken ? 'Quay lại Thư viện' : 'Về trang chủ / Đăng nhập'}</span>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -377,9 +395,9 @@ export function VideoDetailPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <Link
-            to="/videos"
+            to={idToken ? '/videos' : '/login'}
             className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
-            title="Quay lại Thư viện bài giảng"
+            title={idToken ? 'Quay lại Thư viện bài giảng' : 'Về trang Đăng nhập'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -388,6 +406,15 @@ export function VideoDetailPage() {
               <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                 {job.original_filename || job.file_name || 'Chi tiết bài giảng'}
               </h1>
+
+              {/* Public Badge */}
+              {isPublic && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  <Share2 className="w-3 h-3 text-indigo-600" />
+                  Bài giảng chia sẻ công khai
+                </span>
+              )}
+
               {/* Content Source Badge */}
               {job.content_source === 'OCR' ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
@@ -401,21 +428,38 @@ export function VideoDetailPage() {
                 </span>
               )}
             </div>
+
             <p className="text-xs text-slate-500 font-mono mt-1 flex items-center gap-2">
-              <span>Job ID: {job.job_id}</span>
-              <span>•</span>
-              <span>{job.created_at ? new Date(job.created_at).toLocaleString('vi-VN') : ''}</span>
+              {job.created_at && (
+                <span>{new Date(job.created_at).toLocaleString('vi-VN')}</span>
+              )}
+              {isPublic && (
+                <span className="text-slate-400">· Chế độ xem khách (Không cần tài khoản)</span>
+              )}
             </p>
           </div>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          {!isPublic && isCompleted && (
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 text-xs font-bold shadow-sm transition-colors"
+              title="Tạo liên kết chia sẻ công khai (7 ngày)"
+            >
+              <Share2 className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Chia sẻ bài giảng</span>
+            </button>
+          )}
+
           <button
             onClick={() => loadDetail(false)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-semibold shadow-sm transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin text-indigo-600' : ''}`} />
-            <span>Làm mới trạng thái</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isProcessing && !isPublic ? 'animate-spin text-indigo-600' : ''}`} />
+            <span>Làm mới</span>
           </button>
         </div>
       </div>
@@ -437,178 +481,69 @@ export function VideoDetailPage() {
         </div>
       )}
 
-      {/* Pipeline Stepper View: In-Progress */}
-      {isProcessing && (
-        <div className="mb-8 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+      {/* Status Banner: In-Progress (Only for owner mode) */}
+      {!isPublic && isProcessing && (
+        <div className="mb-6 p-4 sm:p-5 bg-indigo-50/80 rounded-2xl border border-indigo-200/80 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
-                Pipeline Đang Xử Lý Bất Đồng Bộ Trên Cloud
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                Hệ thống đang xử lý bài giảng của bạn
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Trang này tự động thăm dò (Short Polling mỗi 3.5s). Toàn bộ học liệu sẽ tự xuất hiện khi xử lý xong.
+                Trang này tự động cập nhật trạng thái. Toàn bộ học liệu sẽ xuất hiện khi xử lý xong.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {job.status}
-            </span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
-            {[
-              { title: '1. S3 Video Ingest', desc: 'S3 Event đẩy vào hàng đợi SQS' },
-              { title: '2. Transcribe / OCR', desc: 'Tách lời nói hoặc bóc khung hình' },
-              { title: '3. Bedrock AI', desc: 'Sinh Summary & Bộ câu hỏi Quiz' },
-              { title: '4. Sẵn sàng học tập', desc: 'Lưu kết quả DynamoDB Results' }
-            ].map((step, idx) => {
-              const status = getStepStatus(idx);
-              return (
-                <div
-                  key={idx}
-                  className={`p-4 rounded-xl border transition-all ${
-                    status === 'completed'
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                      : status === 'current'
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-900 ring-2 ring-indigo-200 shadow-sm'
-                      : status === 'failed'
-                      ? 'bg-rose-50 border-rose-200 text-rose-900'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold">{step.title}</span>
-                    {status === 'completed' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                    {status === 'current' && <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />}
-                    {status === 'failed' && <XCircle className="w-4 h-4 text-rose-600" />}
-                  </div>
-                  <p className="text-[11px] leading-relaxed opacity-80">{step.desc}</p>
-                </div>
-              );
-            })}
-          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 border border-indigo-200 shrink-0 ml-3">
+            {job.status}
+          </span>
         </div>
       )}
 
-      {/* Completed State: Compact summary bar with toggle */}
-      {isCompleted && !showCompletedStepper && (
-        <div className="mb-6 px-4 py-2.5 bg-emerald-50/80 rounded-2xl border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 shadow-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-semibold">Pipeline xử lý thành công</span>
-            <span className="text-emerald-700 hidden sm:inline">• Đã hoàn tất 4/4 bước phân tích học liệu trên Cloud</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
-              {job.status}
-            </span>
-            <button
-              onClick={() => setShowCompletedStepper(true)}
-              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 ml-2"
-            >
-              <span>Xem chi tiết pipeline</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Completed State: Expanded Stepper view */}
-      {isCompleted && showCompletedStepper && (
-        <div className="mb-8 p-6 bg-white rounded-2xl border border-emerald-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+      {/* Status Banner: Completed (Only in owner mode) */}
+      {!isPublic && isCompleted && (
+        <div className="mb-6 p-4 sm:p-5 bg-emerald-50/80 rounded-2xl border border-emerald-200/80 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Pipeline Đã Xử Lý Hoàn Tất Trên Cloud (4/4 Bước)
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                Hệ thống đã xử lý thành công
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Toàn bộ dữ liệu học liệu (Video, Transcript, Summary, Quiz) đã sẵn sàng.
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-                {job.status}
-              </span>
-              <button
-                onClick={() => setShowCompletedStepper(false)}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
-              >
-                <span>Thu gọn</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
-            {[
-              { title: '1. S3 Video Ingest', desc: 'S3 Event đẩy vào hàng đợi SQS' },
-              { title: '2. Transcribe / OCR', desc: 'Tách lời nói hoặc bóc khung hình' },
-              { title: '3. Bedrock AI', desc: 'Sinh Summary & Bộ câu hỏi Quiz' },
-              { title: '4. Sẵn sàng học tập', desc: 'Lưu kết quả DynamoDB Results' }
-            ].map((step, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-900"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold">{step.title}</span>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                </div>
-                <p className="text-[11px] leading-relaxed opacity-80">{step.desc}</p>
-              </div>
-            ))}
-          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0 ml-3">
+            {job.status}
+          </span>
         </div>
       )}
 
-      {/* Failed State: Stepper view */}
-      {isFailed && (
-        <div className="mb-8 p-6 bg-white rounded-2xl border border-rose-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+      {/* Status Banner: Failed */}
+      {!isPublic && isFailed && (
+        <div className="mb-6 p-4 sm:p-5 bg-rose-50 rounded-2xl border border-rose-200 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="text-base font-bold text-rose-900 flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-rose-600" />
-                Pipeline Gặp Lỗi Khi Xử Lý
+              <h3 className="text-sm sm:text-base font-bold text-rose-900">
+                Có vấn đề khi đang xử lý bài giảng
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-rose-700 mt-0.5 font-mono">
                 {job.error_message || job.error_code || 'Không thể hoàn tất toàn bộ quy trình xử lý học liệu.'}
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
-              FAILED
-            </span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
-            {[
-              { title: '1. S3 Video Ingest', desc: 'S3 Event đẩy vào hàng đợi SQS' },
-              { title: '2. Transcribe / OCR', desc: 'Tách lời nói hoặc bóc khung hình' },
-              { title: '3. Bedrock AI', desc: 'Sinh Summary & Bộ câu hỏi Quiz' },
-              { title: '4. Sẵn sàng học tập', desc: 'Lưu kết quả DynamoDB Results' }
-            ].map((step, idx) => {
-              const status = getStepStatus(idx);
-              return (
-                <div
-                  key={idx}
-                  className={`p-4 rounded-xl border transition-all ${
-                    status === 'failed'
-                      ? 'bg-rose-50 border-rose-300 text-rose-900 ring-2 ring-rose-200 shadow-sm'
-                      : status === 'completed'
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold">{step.title}</span>
-                    {status === 'failed' && <XCircle className="w-4 h-4 text-rose-600" />}
-                    {status === 'completed' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                  </div>
-                  <p className="text-[11px] leading-relaxed opacity-80">{step.desc}</p>
-                </div>
-              );
-            })}
-          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200 shrink-0 ml-3">
+            {job.status || 'FAILED'}
+          </span>
         </div>
       )}
 
@@ -720,7 +655,7 @@ export function VideoDetailPage() {
                 {filteredTranscript.length === 0 ? (
                   <div className="text-center py-12 text-slate-400 text-xs">
                     {transcriptItems.length === 0
-                      ? isProcessing
+                      ? isProcessing && !isPublic
                         ? 'Đang trích xuất nội dung... Dữ liệu sẽ hiển thị ngay khi hoàn tất.'
                         : 'Không có dữ liệu transcript cho bài giảng này.'
                       : 'Không tìm thấy đoạn nội dung phù hợp với từ khóa.'}
@@ -770,7 +705,7 @@ export function VideoDetailPage() {
             <div className="flex-1 p-5 overflow-y-auto">
               {!summaryData ? (
                 <div className="text-center py-16 text-slate-400 text-xs">
-                  {isProcessing
+                  {isProcessing && !isPublic
                     ? 'Amazon Bedrock đang phân tích nội dung và sinh tóm tắt bài giảng...'
                     : 'Chưa có bản tóm tắt cho bài giảng này.'}
                 </div>
@@ -826,7 +761,7 @@ export function VideoDetailPage() {
             <div className="flex-1 p-5 overflow-y-auto flex flex-col justify-between">
               {quizQuestions.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 text-xs">
-                  {isProcessing
+                  {isProcessing && !isPublic
                     ? 'Bedrock AI đang biên soạn bộ câu hỏi trắc nghiệm ôn tập...'
                     : 'Chưa có bộ câu hỏi trắc nghiệm cho bài giảng này.'}
                 </div>
@@ -878,10 +813,14 @@ export function VideoDetailPage() {
                               } else {
                                 if (selectedOptionKey === opt.key) {
                                   optionClass = 'border-indigo-500 bg-indigo-50 text-indigo-900 font-semibold';
+                                } else {
+                                  optionClass = 'border-slate-200 bg-slate-50/30 text-slate-400';
                                 }
                               }
-                            } else if (selectedOptionKey === opt.key) {
-                              optionClass = 'border-indigo-600 bg-indigo-50/70 text-indigo-900 font-semibold ring-1 ring-indigo-500';
+                            } else {
+                              if (selectedOptionKey === opt.key) {
+                                optionClass = 'border-indigo-600 bg-indigo-50/90 text-indigo-950 font-bold ring-2 ring-indigo-500/20';
+                              }
                             }
 
                             return (
@@ -890,36 +829,47 @@ export function VideoDetailPage() {
                                 type="button"
                                 disabled={quizSubmitted}
                                 onClick={() => handleSelectOption(qId, opt.key)}
-                                className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-center justify-between gap-2 ${optionClass}`}
+                                className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-start gap-2.5 ${optionClass}`}
                               >
-                                <div className="flex items-center gap-2">
-                                  <span className="w-5 h-5 rounded-md bg-white border border-slate-300 text-slate-700 font-bold text-[10px] flex items-center justify-center shrink-0">
-                                    {opt.key}
-                                  </span>
-                                  <span className="leading-relaxed">{opt.text}</span>
-                                </div>
-                                {quizSubmitted && hasAnswerKey && opt.key === ansInfo.correct_answer && (
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                )}
-                                {quizSubmitted && hasAnswerKey && selectedOptionKey === opt.key && selectedOptionKey !== ansInfo.correct_answer && (
-                                  <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                                )}
+                                <span
+                                  className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-bold text-[11px] shrink-0 transition-colors ${
+                                    selectedOptionKey === opt.key
+                                      ? 'bg-indigo-600 text-white'
+                                      : 'bg-white border border-slate-300 text-slate-600'
+                                  }`}
+                                >
+                                  {opt.key}
+                                </span>
+                                <span className="flex-1 mt-0.5 leading-relaxed">{opt.text}</span>
                               </button>
                             );
                           })}
                         </div>
 
-                        {/* Explanation after submit */}
-                        {quizSubmitted && ansInfo?.explanation && (
-                          <div className="mt-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
-                            <div className="font-bold text-slate-800 flex items-center gap-1.5 mb-1 text-[11px]">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>Đáp án chính xác: Phương án {ansInfo.correct_answer}</span>
+                        {/* Explanation & Feedback (Shown after submit) */}
+                        {quizSubmitted && ansInfo && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 text-xs">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              {selectedOptionKey === ansInfo.correct_answer ? (
+                                <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                  Chính xác! Đáp án đúng: {ansInfo.correct_answer}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-rose-700 font-bold">
+                                  <XCircle className="w-4 h-4 text-rose-600" />
+                                  Chưa chính xác. Đáp án đúng là {ansInfo.correct_answer}
+                                </span>
+                              )}
                             </div>
-                            <p className="text-slate-600 text-[11px] leading-relaxed">
-                              <span className="font-semibold text-slate-700">Giải thích: </span>
-                              {ansInfo.explanation}
-                            </p>
+                            {ansInfo.explanation && (
+                              <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[11px] leading-relaxed">
+                                <strong className="font-semibold text-slate-900 block mb-0.5">
+                                  Giải thích chi tiết:
+                                </strong>
+                                {ansInfo.explanation}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -975,7 +925,19 @@ export function VideoDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Share Modal Dialog */}
+      {!isPublic && jobId && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          jobId={jobId}
+          jobTitle={job.original_filename || job.file_name}
+          token={idToken}
+        />
+      )}
     </div>
   );
 }
+
 export default VideoDetailPage;

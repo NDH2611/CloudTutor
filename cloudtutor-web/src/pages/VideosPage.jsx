@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchJobs, deleteJob } from '../api/jobs';
+import { ShareModal } from '../components/ShareModal';
 import {
   Video,
   Clock,
@@ -15,7 +16,8 @@ import {
   CheckCircle,
   Layers,
   PlayCircle,
-  Cpu
+  Cpu,
+  Share2
 } from 'lucide-react';
 
 export function VideosPage() {
@@ -23,6 +25,7 @@ export function VideosPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [selectedShareJob, setSelectedShareJob] = useState(null);
 
   const loadJobs = async () => {
     setLoading(true);
@@ -60,6 +63,16 @@ export function VideosPage() {
     if (!bytes) return null;
     const mb = bytes / (1024 * 1024);
     return `${mb.toFixed(1)} MB`;
+  };
+
+  const handleOpenLecture = (jobId, title) => {
+    try {
+      const lectureInfo = { id: jobId, title: title || 'Bài giảng đang xem' };
+      localStorage.setItem('cloudtutor_recent_lecture', JSON.stringify(lectureInfo));
+      window.dispatchEvent(new CustomEvent('cloudtutor:recent_lecture_updated', { detail: lectureInfo }));
+    } catch (e) {
+      console.warn('Failed to save recent lecture:', e);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -140,7 +153,7 @@ export function VideosPage() {
             Thư viện bài giảng (My Videos)
           </h1>
           <p className="text-slate-500 mt-1 text-sm">
-            Danh sách bài giảng CloudTutor từ AWS DynamoDB & S3 Pipeline.
+            Danh sách bài giảng CloudTutor.
           </p>
         </div>
 
@@ -207,6 +220,7 @@ export function VideosPage() {
                   {/* Job Title / File Name */}
                   <Link
                     to={`/videos/${job.job_id}`}
+                    onClick={() => handleOpenLecture(job.job_id, fileName)}
                     className="font-bold text-slate-800 text-sm line-clamp-2 hover:text-indigo-600 transition-colors block"
                   >
                     {fileName}
@@ -245,6 +259,7 @@ export function VideosPage() {
                 <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
                   <Link
                     to={`/videos/${job.job_id}`}
+                    onClick={() => handleOpenLecture(job.job_id, fileName)}
                     className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                       isReady
                         ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
@@ -271,20 +286,51 @@ export function VideosPage() {
                     )}
                   </Link>
 
-                  <button
-                    onClick={(e) => handleDelete(e, job.job_id)}
-                    disabled={deletingId === job.job_id}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                    title="Xóa bài giảng và dữ liệu S3"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {isReady && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedShareJob({ id: job.job_id, title: fileName });
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Chia sẻ bài giảng (Liên kết 7 ngày)"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(e, job.job_id)}
+                      disabled={deletingId === job.job_id}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Xóa bài giảng và dữ liệu S3"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Share Modal Dialog */}
+      {selectedShareJob && (
+        <ShareModal
+          isOpen={Boolean(selectedShareJob)}
+          onClose={() => setSelectedShareJob(null)}
+          jobId={selectedShareJob.id}
+          jobTitle={selectedShareJob.title}
+          token={idToken}
+        />
+      )}
     </div>
   );
 }
+
+export default VideosPage;

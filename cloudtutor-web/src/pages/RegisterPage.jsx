@@ -11,7 +11,9 @@ import {
   CheckCircle,
   ArrowRight,
   RefreshCw,
-  Send
+  Send,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export function RegisterPage() {
@@ -25,6 +27,11 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState(isMockMode ? '123456' : '');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState(
@@ -45,13 +52,20 @@ export function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setPasswordError('');
+    setConfirmPasswordError('');
 
-    if (password !== confirmPassword) {
-      setError('Mật khẩu nhập lại không khớp');
-      return;
-    }
+    let hasValidationError = false;
     if (password.length < 8) {
-      setError('Mật khẩu Cognito yêu cầu tối thiểu 8 ký tự (chữ hoa, chữ thường, số)');
+      setPasswordError('Mật khẩu yêu cầu tối thiểu 8 ký tự (chữ hoa, chữ thường, số)');
+      hasValidationError = true;
+    }
+    if (password !== confirmPassword) {
+      setConfirmPasswordError('Mật khẩu nhập lại không khớp');
+      hasValidationError = true;
+    }
+
+    if (hasValidationError) {
       return;
     }
 
@@ -78,7 +92,7 @@ export function RegisterPage() {
 
     try {
       await confirmCode(email, verificationCode);
-      alert('Tài khoản đã được xác thực thành công trên AWS Cognito User Pool!');
+      alert('Tài khoản đã được xác thực thành công!');
       navigate('/login');
     } catch (err) {
       setError(err.message || 'Xác thực thất bại');
@@ -111,11 +125,11 @@ export function RegisterPage() {
               <UserPlus className="w-6 h-6" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {step === 1 ? 'Tạo tài khoản CloudTutor' : 'Xác thực Email Cognito'}
+              {step === 1 ? 'Tạo tài khoản CloudTutor' : 'Xác thực Email'}
             </h1>
             <p className="text-sm text-slate-500 mt-1">
               {step === 1
-                ? 'Đăng ký vào AWS Cognito User Pool của dự án'
+                ? 'Đăng ký và bắt đầu sử dụng hệ thống'
                 : `Nhập mã xác nhận 6 số đã gửi đến ${email}`}
             </p>
           </div>
@@ -178,14 +192,35 @@ export function RegisterPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError('');
+                    }}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
+                      passwordError
+                        ? 'border-rose-300 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                    }`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                    title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {passwordError && (
+                  <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{passwordError}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -195,14 +230,35 @@ export function RegisterPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (confirmPasswordError) setConfirmPasswordError('');
+                    }}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
+                      confirmPasswordError
+                        ? 'border-rose-300 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                    }`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                    title={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {confirmPasswordError && (
+                  <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{confirmPasswordError}</span>
+                  </p>
+                )}
               </div>
 
               <button
@@ -214,7 +270,7 @@ export function RegisterPage() {
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>Đăng ký qua Cognito SDK</span>
+                    <span>Đăng ký</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -275,7 +331,7 @@ export function RegisterPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <span>Kích hoạt tài khoản Cognito</span>
+                  <span>Kích hoạt tài khoản CloudTutor</span>
                 )}
               </button>
 

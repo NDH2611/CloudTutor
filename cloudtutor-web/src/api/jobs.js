@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { INITIAL_MOCK_JOBS, MOCK_JOB_DETAILS } from './mockData';
+import { INITIAL_MOCK_JOBS, MOCK_JOB_DETAILS } from './mockData.js';
 
 // Setup Axios 401 response interceptor for token expiration
 axios.interceptors.response.use(
@@ -12,8 +12,8 @@ axios.interceptors.response.use(
   }
 );
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || !API_BASE_URL;
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '';
+export const USE_MOCK = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !API_BASE_URL;
 
 // Local storage key for persisting jobs during frontend testing
 const LOCAL_STORAGE_JOBS_KEY = 'cloudtutor_jobs_v1';
@@ -315,5 +315,108 @@ export async function deleteJob(jobId, token = '') {
     }
   });
 
+  return res.data;
+}
+
+
+const LOCAL_STORAGE_SHARED_TOKENS_KEY = 'cloudtutor_shared_tokens_v1';
+
+function getStoredSharedTokens() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_SHARED_TOKENS_KEY);
+  if (!saved) return {};
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredSharedTokens(tokens) {
+  localStorage.setItem(LOCAL_STORAGE_SHARED_TOKENS_KEY, JSON.stringify(tokens));
+}
+
+/**
+ * Create or reuse public Share Link token for a job
+ * Contract: POST /jobs/{id}/share -> { share_token, expires_at }
+ */
+export async function createShareLink(jobId, token = '') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 400));
+    const tokens = getStoredSharedTokens();
+    
+    // Check if token already exists for this job and not expired
+    if (tokens[jobId] && new Date(tokens[jobId].expires_at) > new Date()) {
+      return tokens[jobId];
+    }
+
+    const shareToken = 'share_' + Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+    // 7 days expiration as specified
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    const shareInfo = {
+      job_id: jobId,
+      share_token: shareToken,
+      expires_at: expiresAt
+    };
+
+    tokens[jobId] = shareInfo;
+    tokens[shareToken] = shareInfo; // map both ways
+    saveStoredSharedTokens(tokens);
+
+    return {
+      share_token: shareToken,
+      expires_at: expiresAt
+    };
+  }
+
+  const res = await axios.post(
+    `${API_BASE_URL}/jobs/${jobId}/share`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return res.data;
+}
+
+/**
+ * Access a public shared lecture via share token (No Authorization header)
+ * Contract: GET /public/share/{token}
+ * -> { original_filename, warnings, content_source, transcript, chunks, summary, quiz, video_url }
+ */
+export async function getPublicShareDetail(shareToken) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 350));
+    const tokens = getStoredSharedTokens();
+    const shareInfo = tokens[shareToken];
+
+    let targetJobId = shareInfo?.job_id;
+    if (!targetJobId) {
+      targetJobId = 'job_7048e75d-0975-4e59-abd0-53d173441d38';
+    }
+
+    const details = getStoredDetails();
+    const detail = details[targetJobId] || MOCK_JOB_DETAILS['job_7048e75d-0975-4e59-abd0-53d173441d38'] || MOCK_JOB_DETAILS['job-98a4b12c'];
+
+    if (!detail) {
+      throw new Error('NOT_FOUND');
+    }
+
+    return {
+      original_filename: detail.original_filename || detail.file_name,
+      warnings: detail.warnings || [],
+      content_source: detail.content_source || 'ASR',
+      transcript: detail.transcript || null,
+      chunks: detail.chunks || null,
+      summary: detail.summary || null,
+      quiz: detail.quiz || null,
+      video_url: detail.video_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+    };
+  }
+
+  const res = await axios.get(`${API_BASE_URL}/public/share/${shareToken}`);
   return res.data;
 }

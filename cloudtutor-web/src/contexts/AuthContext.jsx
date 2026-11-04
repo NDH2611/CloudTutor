@@ -4,6 +4,8 @@ import {
   sdkRegister,
   sdkConfirmCode,
   sdkResendCode,
+  sdkForgotPassword,
+  sdkConfirmPassword,
   sdkLogout,
   sdkRefreshSession,
   isTokenExpired,
@@ -161,6 +163,14 @@ export function AuthProvider({ children }) {
     return sdkResendCode(email);
   };
 
+  const forgotPassword = async (email) => {
+    return sdkForgotPassword(email);
+  };
+
+  const confirmPassword = async (email, code, newPassword) => {
+    return sdkConfirmPassword(email, code, newPassword);
+  };
+
   const logout = () => {
     if (user?.email) {
       sdkLogout(user.email);
@@ -187,6 +197,8 @@ export function AuthProvider({ children }) {
     register,
     confirmCode,
     resendCode,
+    forgotPassword,
+    confirmPassword,
     logout,
     quickDemoLogin
   };

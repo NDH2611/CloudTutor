@@ -1,11 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Cloud, UploadCloud, Video, LogOut, User, CheckCircle2, Shield } from 'lucide-react';
+import { Cloud, UploadCloud, Video, LogOut, User, CheckCircle2, Shield, PlayCircle } from 'lucide-react';
+
+const RECENT_LECTURE_KEY = 'cloudtutor_recent_lecture';
 
 export function Navbar() {
   const { user, logout, isMockMode } = useAuth();
   const location = useLocation();
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const [recentLecture, setRecentLecture] = useState(() => {
+    try {
+      const stored = localStorage.getItem(RECENT_LECTURE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleRecentUpdate = (e) => {
+      if (e?.detail) {
+        setRecentLecture(e.detail);
+      } else {
+        try {
+          const stored = localStorage.getItem(RECENT_LECTURE_KEY);
+          setRecentLecture(stored ? JSON.parse(stored) : null);
+        } catch {
+          setRecentLecture(null);
+        }
+      }
+    };
+
+    window.addEventListener('cloudtutor:recent_lecture_updated', handleRecentUpdate);
+    window.addEventListener('storage', handleRecentUpdate);
+    return () => {
+      window.removeEventListener('cloudtutor:recent_lecture_updated', handleRecentUpdate);
+      window.removeEventListener('storage', handleRecentUpdate);
+    };
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -52,6 +87,22 @@ export function Navbar() {
                 <Video className="w-4 h-4" />
                 <span>Thư viện Video</span>
               </Link>
+              {recentLecture && (
+                <Link
+                  to={`/videos/${recentLecture.id}`}
+                  title={recentLecture.title || 'Bài giảng đang xem'}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors max-w-[170px] sm:max-w-[240px] ${
+                    location.pathname === `/videos/${recentLecture.id}`
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <PlayCircle className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">
+                    {recentLecture.title || 'Bài giảng đang xem'}
+                  </span>
+                </Link>
+              )}
             </nav>
           )}
 
@@ -83,7 +134,8 @@ export function Navbar() {
                   {user.email?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <button
-                  onClick={logout}
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(true)}
                   title="Đăng xuất"
                   className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                 >
@@ -109,6 +161,48 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            className="bg-white w-full max-w-sm rounded-2xl border border-slate-200 shadow-2xl p-6 text-center transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <LogOut className="w-6 h-6 ml-0.5" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 mb-1.5">
+              Xác nhận đăng xuất
+            </h3>
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản CloudTutor không?
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  logout();
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-200 transition-colors"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

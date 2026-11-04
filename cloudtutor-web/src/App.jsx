@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { UploadPage } from './pages/UploadPage';
 import { VideosPage } from './pages/VideosPage';
 import { VideoDetailPage } from './pages/VideoDetailPage';
@@ -20,6 +21,10 @@ export function App() {
               {/* Public Auth routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+              {/* Public Lecture Share route (No login required, expires in 7 days) */}
+              <Route path="/share/:token" element={<VideoDetailPage isPublicShare={true} />} />
 
               {/* Protected Workspace routes */}
               <Route

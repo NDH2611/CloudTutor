@@ -63,6 +63,8 @@ export function translateCognitoError(err) {
       return 'Mã xác nhận OTP 6 số không chính xác.';
     case 'ExpiredCodeException':
       return 'Mã xác nhận OTP đã hết hạn. Vui lòng bấm gửi lại mã mới.';
+    case 'InvalidParameterException':
+      return 'Yêu cầu không hợp lệ hoặc tài khoản chưa xác minh email khôi phục.';
     case 'TooManyRequestsException':
     case 'LimitExceededException':
       return 'Quá nhiều yêu cầu liên tiếp. Vui lòng đợi trong giây lát.';
@@ -325,6 +327,92 @@ export async function sdkRefreshSession() {
         },
         isMock: false
       });
+    });
+  });
+}
+
+/**
+ * Initiate Forgot Password flow with AWS Cognito
+ */
+export async function sdkForgotPassword(email) {
+  if (!userPool) {
+    await new Promise((res) => setTimeout(res, 500));
+    return {
+      success: true,
+      isMock: true,
+      destination: email,
+      message: 'Mã OTP xác thực giả lập đã được tạo (Gợi ý: nhập 123456)'
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: userPool
+    });
+
+    cognitoUser.forgotPassword({
+      onSuccess: (data) => {
+        resolve({
+          success: true,
+          data,
+          destination: email,
+          message: 'Yêu cầu khôi phục mật khẩu đã được tiếp nhận.'
+        });
+      },
+      onFailure: (err) => {
+        const customErr = new Error(translateCognitoError(err));
+        customErr.code = err.code || err.name;
+        reject(customErr);
+      },
+      inputVerificationCode: (data) => {
+        const destination = data?.CodeDeliveryDetails?.Destination || email;
+        resolve({
+          success: true,
+          data,
+          destination,
+          message: `Mã OTP xác thực đã được gửi tới ${destination}`
+        });
+      }
+    });
+  });
+}
+
+/**
+ * Confirm New Password with OTP verification code in AWS Cognito
+ */
+export async function sdkConfirmPassword(email, code, newPassword) {
+  if (!userPool) {
+    await new Promise((res) => setTimeout(res, 500));
+    if (code !== '123456' && code.length !== 6) {
+      throw new Error('Mã xác thực không hợp lệ. Gợi ý: nhập 123456 trong chế độ Mock.');
+    }
+    return {
+      success: true,
+      isMock: true,
+      message: 'Đặt lại mật khẩu thành công!'
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: userPool
+    });
+
+    cognitoUser.confirmPassword(code, newPassword, {
+      onSuccess: (status) => {
+        resolve({
+          success: true,
+          status,
+          message: 'Mật khẩu đã được thiết lập lại thành công trên AWS Cognito!'
+        });
+      },
+      onFailure: (err) => {
+        const customErr = new Error(translateCognitoError(err));
+        customErr.code = err.code || err.name;
+        reject(customErr);
+      }
     });
   });
 }

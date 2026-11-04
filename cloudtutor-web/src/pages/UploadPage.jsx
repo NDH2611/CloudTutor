@@ -151,11 +151,8 @@ export function UploadPage() {
       {/* Page Title */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-          Tải lên bài giảng (Lecture Package)
+          Tải lên bài giảng
         </h1>
-        <p className="text-slate-500 mt-1.5 text-sm sm:text-base">
-          Tuần 1: Khởi tạo Job Manifest và truyền trực tiếp video lên Amazon S3 qua Presigned URL an toàn.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -168,31 +165,23 @@ export function UploadPage() {
                 <CheckCircle2 className="w-9 h-9" />
               </div>
               <h2 className="text-xl font-bold text-slate-900">
-                Tải lên Amazon S3 thành công!
+                Tải lên hệ thống thành công!
               </h2>
-              <p className="text-sm text-slate-600 mt-2 max-w-md mx-auto">
-                Tệp video đã được lưu an toàn tại S3 bucket và thông báo S3 Event đã được gửi tới hàng đợi SQS.
-              </p>
+    
 
               {/* Upload Details Card */}
               {jobInfo && (
                 <div className="mt-6 p-4 bg-slate-50 rounded-xl text-left border border-slate-200 text-xs font-mono space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Job ID:</span>
-                    <span className="font-bold text-indigo-700">{jobInfo.job_id}</span>
-                  </div>
+        
                   <div className="flex justify-between">
                     <span className="text-slate-500">Tệp:</span>
                     <span className="text-slate-800 truncate max-w-[240px]">{file?.name}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">S3 Key:</span>
-                    <span className="text-slate-700 truncate max-w-[240px]">{jobInfo.s3_key}</span>
-                  </div>
+                 
                   <div className="flex justify-between">
                     <span className="text-slate-500">Trạng thái:</span>
                     <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">
-                      UPLOADED (Sẵn sàng cho Week 2)
+                      COMPLETED
                     </span>
                   </div>
                 </div>
@@ -363,7 +352,7 @@ export function UploadPage() {
                     className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-lg shadow-indigo-200 transition-all flex items-center justify-center space-x-2"
                   >
                     <UploadCloud className="w-4 h-4" />
-                    <span>Bắt đầu tạo Job & Tải lên S3</span>
+                    <span>Tải lên Video</span>
                   </button>
                 </div>
               )}
@@ -459,11 +448,11 @@ export function UploadPage() {
                         2
                       </div>
                       <span className="font-semibold text-slate-800 text-xs">
-                        Khởi tạo Job & Tải lên S3
+                        Upload Video
                       </span>
                     </div>
                     <p className="text-slate-500 pl-7 leading-relaxed text-[11px]">
-                      Bấm nút <b className="text-slate-700">"Bắt đầu tạo Job & Tải lên S3"</b>. Hệ thống sẽ sinh Presigned URL bảo mật và truyền thẳng video lên Amazon S3.
+                      Bấm nút <b className="text-slate-700">"Tải lên Video"</b>. Hệ thống sẽ sinh Presigned URL bảo mật và truyền thẳng video lên Amazon S3.
                     </p>
                   </div>
 
