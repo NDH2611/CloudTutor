@@ -269,6 +269,7 @@ export async function getJobDetail(jobId, token = '') {
       } else {
         detail.status = 'COMPLETED';
         detail.content_source = 'ASR';
+        detail.transcript = MOCK_JOB_DETAILS['job-98a4b12c'].transcript;
         detail.chunks = MOCK_JOB_DETAILS['job-98a4b12c'].chunks;
         detail.summary = MOCK_JOB_DETAILS['job-98a4b12c'].summary;
         detail.quiz = MOCK_JOB_DETAILS['job-98a4b12c'].quiz;

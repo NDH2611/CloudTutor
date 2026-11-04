@@ -42,7 +42,7 @@ export function VideoDetailPage() {
   const [duration, setDuration] = useState(0);
   const [searchChunk, setSearchChunk] = useState('');
 
-  // Quiz state: { [questionIndex]: selectedOptionIndex }
+  // Quiz state: { [questionId]: selectedOptionKey }
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
@@ -106,7 +106,7 @@ export function VideoDetailPage() {
     }
   };
 
-  // Seek video when clicking a transcript chunk
+  // Seek video when clicking a transcript segment
   const handleSeek = (seconds) => {
     if (videoRef.current) {
       videoRef.current.currentTime = Math.max(0, seconds);
@@ -201,14 +201,175 @@ export function VideoDetailPage() {
   const isProcessing = !isTerminal;
   const isCompleted = ['COMPLETED', 'COMPLETED_WITH_WARNING'].includes(job.status);
   const isFailed = job.status === 'FAILED';
-  const chunks = job.chunks || [];
-  const summary = job.summary || null;
-  const quiz = job.quiz || null;
 
-  // Filter chunks based on search
-  const filteredChunks = chunks.filter((c) =>
-    (c.text || '').toLowerCase().includes(searchChunk.toLowerCase())
-  );
+  // 1. Resolve Transcript Items: Prefer granular segments from transcript, fallback to chunks.chunks or chunks
+  const transcriptItems = (() => {
+    if (Array.isArray(job.transcript?.segments) && job.transcript.segments.length > 0) {
+      return job.transcript.segments;
+    }
+    if (Array.isArray(job.chunks?.chunks) && job.chunks.chunks.length > 0) {
+      return job.chunks.chunks;
+    }
+    if (Array.isArray(job.chunks) && job.chunks.length > 0) {
+      return job.chunks;
+    }
+    return [];
+  })();
+
+  // Filtered transcript based on user search
+  const filteredTranscript = (() => {
+    if (!searchChunk.trim()) return transcriptItems;
+    const q = searchChunk.toLowerCase();
+    return transcriptItems.filter((item) => (item.text || '').toLowerCase().includes(q));
+  })();
+
+  // 2. Resolve Summary: Parse raw string into sentences for Key Points, or support legacy object
+  const summaryData = (() => {
+    if (!job.summary) return null;
+    if (typeof job.summary === 'string') {
+      const raw = job.summary.trim();
+      const sentences = raw
+        .split(/(?<=[.!?])\s+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 8);
+
+      return {
+        isString: true,
+        title: 'Tóm Tắt Cốt Lõi Bài Giảng',
+        overview: raw,
+        key_points: sentences.length > 1 ? sentences : [raw],
+        recommendations: null
+      };
+    }
+    return {
+      isString: false,
+      title: job.summary.title || 'Tóm Tắt Tổng Quan',
+      overview: job.summary.overview || '',
+      key_points: Array.isArray(job.summary.key_points) ? job.summary.key_points : [],
+      recommendations: job.summary.recommendations || ''
+    };
+  })();
+
+  // 3. Resolve Quiz Questions List
+  const quizQuestions = (() => {
+    if (!job.quiz) return [];
+    if (Array.isArray(job.quiz.question)) return job.quiz.question;
+    if (Array.isArray(job.quiz.questions)) return job.quiz.questions;
+    if (Array.isArray(job.quiz)) return job.quiz;
+    return [];
+  })();
+
+  // 4. Resolve Quiz Answers List (from quiz.answer, quiz.answers, job.answers, etc.)
+  const quizAnswersList = (() => {
+    if (!job.quiz && !job.answers && !job.quiz_answers) return [];
+    if (Array.isArray(job.quiz?.answer)) return job.quiz.answer;
+    if (Array.isArray(job.quiz?.answers)) return job.quiz.answers;
+    if (Array.isArray(job.answers)) return job.answers;
+    if (Array.isArray(job.quiz_answers)) return job.quiz_answers;
+    return [];
+  })();
+
+  // Build Answer Map for fast O(1) lookup
+  const answerMap = (() => {
+    const map = {};
+    quizAnswersList.forEach((ans) => {
+      const qId = ans.question_id ?? ans.id;
+      if (qId !== undefined && qId !== null) {
+        map[String(qId)] = {
+          correct_answer: (ans.correct_answer || '').trim().toUpperCase(),
+          explanation: ans.explaination || ans.explanation || ''
+        };
+      }
+    });
+    return map;
+  })();
+
+  // Difficulty badge helper
+  const getDifficultyBadge = (difficulty) => {
+    if (!difficulty) return null;
+    const diff = String(difficulty).toLowerCase();
+    if (diff === 'easy') {
+      return (
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          Dễ (Easy)
+        </span>
+      );
+    }
+    if (diff === 'medium') {
+      return (
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          Trung bình (Medium)
+        </span>
+      );
+    }
+    if (diff === 'hard') {
+      return (
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          Khó (Hard)
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+        {difficulty}
+      </span>
+    );
+  };
+
+  // Helper to extract question options: supports { "A": "...", ... } and array format
+  const getQuestionOptions = (q) => {
+    if (q.option && typeof q.option === 'object' && !Array.isArray(q.option)) {
+      return Object.entries(q.option).map(([key, text]) => ({
+        key: key.trim().toUpperCase(),
+        text: String(text)
+      }));
+    }
+    if (q.options && typeof q.options === 'object' && !Array.isArray(q.options)) {
+      return Object.entries(q.options).map(([key, text]) => ({
+        key: key.trim().toUpperCase(),
+        text: String(text)
+      }));
+    }
+    if (Array.isArray(q.options)) {
+      return q.options.map((text, idx) => ({
+        key: String.fromCharCode(65 + idx),
+        text: String(text)
+      }));
+    }
+    if (Array.isArray(q.option)) {
+      return q.option.map((text, idx) => ({
+        key: String.fromCharCode(65 + idx),
+        text: String(text)
+      }));
+    }
+    return [];
+  };
+
+  // Option selection handler
+  const handleSelectOption = (qIdentifier, optionKey) => {
+    if (quizSubmitted) return;
+    setQuizAnswers((prev) => ({
+      ...prev,
+      [qIdentifier]: optionKey
+    }));
+  };
+
+  // Calculate scores
+  const totalQuestions = quizQuestions.length;
+  const answeredCount = Object.keys(quizAnswers).length;
+  const correctCount = (() => {
+    if (!quizSubmitted) return 0;
+    let count = 0;
+    quizQuestions.forEach((q, idx) => {
+      const qId = String(q.id ?? idx + 1);
+      const selected = quizAnswers[qId];
+      const ansInfo = answerMap[qId];
+      if (ansInfo && selected && selected.toUpperCase() === ansInfo.correct_answer) {
+        count++;
+      }
+    });
+    return count;
+  })();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -276,7 +437,7 @@ export function VideoDetailPage() {
         </div>
       )}
 
-      {/* Pipeline Stepper View: In-Progress, Collapsible Completed, or Failed */}
+      {/* Pipeline Stepper View: In-Progress */}
       {isProcessing && (
         <div className="mb-8 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -485,7 +646,7 @@ export function VideoDetailPage() {
             </div>
             <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Đồng bộ mốc thời gian thời gian thực</span>
+              <span>Đồng bộ mốc thời gian bài giảng</span>
             </div>
           </div>
         </div>
@@ -505,7 +666,7 @@ export function VideoDetailPage() {
               <FileText className="w-4 h-4" />
               <span>Transcript</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                {chunks.length}
+                {transcriptItems.length}
               </span>
             </button>
 
@@ -531,15 +692,15 @@ export function VideoDetailPage() {
             >
               <HelpCircle className="w-4 h-4" />
               <span>Trắc nghiệm</span>
-              {quiz?.questions?.length > 0 && (
+              {quizQuestions.length > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                  {quiz.questions.length}
+                  {quizQuestions.length}
                 </span>
               )}
             </button>
           </div>
 
-          {/* Tab 1: Interactive Transcript Chunks */}
+          {/* Tab 1: Interactive Transcript Chunks / Segments */}
           {activeTab === 'transcript' && (
             <div className="flex-1 flex flex-col p-4 overflow-hidden">
               {/* Search Chunks */}
@@ -554,26 +715,26 @@ export function VideoDetailPage() {
                 />
               </div>
 
-              {/* Chunks List */}
+              {/* Items List */}
               <div className="flex-1 overflow-y-auto pr-1 space-y-2.5">
-                {filteredChunks.length === 0 ? (
+                {filteredTranscript.length === 0 ? (
                   <div className="text-center py-12 text-slate-400 text-xs">
-                    {chunks.length === 0
+                    {transcriptItems.length === 0
                       ? isProcessing
                         ? 'Đang trích xuất nội dung... Dữ liệu sẽ hiển thị ngay khi hoàn tất.'
                         : 'Không có dữ liệu transcript cho bài giảng này.'
                       : 'Không tìm thấy đoạn nội dung phù hợp với từ khóa.'}
                   </div>
                 ) : (
-                  filteredChunks.map((chunk, idx) => {
-                    const isActive =
-                      currentTime >= (chunk.start_time || 0) &&
-                      currentTime <= (chunk.end_time || (chunk.start_time || 0) + 5);
+                  filteredTranscript.map((item, idx) => {
+                    const startTime = typeof item.start_time === 'number' ? item.start_time : 0;
+                    const endTime = typeof item.end_time === 'number' ? item.end_time : startTime + 5;
+                    const isActive = currentTime >= startTime && currentTime <= endTime;
 
                     return (
                       <div
-                        key={chunk.chunk_id || idx}
-                        onClick={() => handleSeek(chunk.start_time)}
+                        key={item.chunk_id || `seg-${idx}`}
+                        onClick={() => handleSeek(startTime)}
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           isActive
                             ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-200 shadow-sm'
@@ -587,14 +748,14 @@ export function VideoDetailPage() {
                             }`}
                           >
                             <Play className="w-2.5 h-2.5 fill-current" />
-                            {formatTime(chunk.start_time)} - {formatTime(chunk.end_time)}
+                            {formatTime(startTime)} - {formatTime(endTime)}
                           </span>
                           <span className="text-[10px] text-slate-400">
-                            {chunk.source || (job.content_source === 'OCR' ? 'OCR' : 'ASR')}
+                            {item.source || job.content_source || 'ASR'}
                           </span>
                         </div>
                         <p className="text-xs text-slate-800 leading-relaxed whitespace-pre-line">
-                          {chunk.text}
+                          {item.text}
                         </p>
                       </div>
                     );
@@ -607,7 +768,7 @@ export function VideoDetailPage() {
           {/* Tab 2: Bedrock AI Summary */}
           {activeTab === 'summary' && (
             <div className="flex-1 p-5 overflow-y-auto">
-              {!summary ? (
+              {!summaryData ? (
                 <div className="text-center py-16 text-slate-400 text-xs">
                   {isProcessing
                     ? 'Amazon Bedrock đang phân tích nội dung và sinh tóm tắt bài giảng...'
@@ -615,36 +776,44 @@ export function VideoDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
+                  {/* Overview Card */}
                   <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
-                    <h3 className="font-extrabold text-sm text-indigo-950 mb-1">
-                      {summary.title || 'Tóm Tắt Tổng Quan'}
-                    </h3>
-                    <p className="text-slate-700">{summary.overview}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-indigo-600" />
+                      <h3 className="font-extrabold text-sm text-indigo-950">
+                        {summaryData.title}
+                      </h3>
+                    </div>
+                    <p className="text-slate-700 text-xs leading-relaxed">{summaryData.overview}</p>
                   </div>
 
-                  {summary.key_points && summary.key_points.length > 0 && (
+                  {/* Key Points */}
+                  {summaryData.key_points && summaryData.key_points.length > 0 && (
                     <div>
-                      <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-1.5 text-xs">
+                      <h4 className="font-bold text-slate-900 mb-2.5 flex items-center gap-1.5 text-xs">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        Các điểm kiến thức cốt lõi (Key Points)
+                        Các luận điểm cốt lõi của bài giảng (Key Points)
                       </h4>
                       <ul className="space-y-2">
-                        {summary.key_points.map((pt, i) => (
-                          <li key={i} className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                            <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                        {summaryData.key_points.map((pt, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2.5 bg-slate-50 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-200/80 transition-colors"
+                          >
+                            <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                               {i + 1}
                             </span>
-                            <span>{pt}</span>
+                            <span className="text-slate-800 text-xs leading-relaxed">{pt}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {summary.recommendations && (
+                  {summaryData.recommendations && (
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                       <span className="font-bold text-slate-800 block mb-1">💡 Lưu ý quan trọng:</span>
-                      <p className="text-slate-600 text-[11px]">{summary.recommendations}</p>
+                      <p className="text-slate-600 text-[11px]">{summaryData.recommendations}</p>
                     </div>
                   )}
                 </div>
@@ -652,58 +821,87 @@ export function VideoDetailPage() {
             </div>
           )}
 
-          {/* Tab 3: Interactive Quiz */}
+          {/* Tab 3: Interactive Quiz (Test Mode) */}
           {activeTab === 'quiz' && (
             <div className="flex-1 p-5 overflow-y-auto flex flex-col justify-between">
-              {!quiz || !quiz.questions || quiz.questions.length === 0 ? (
+              {quizQuestions.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 text-xs">
                   {isProcessing
-                    ? 'Bedrock AI đang biên soạn câu hỏi ôn tập trắc nghiệm...'
+                    ? 'Bedrock AI đang biên soạn bộ câu hỏi trắc nghiệm ôn tập...'
                     : 'Chưa có bộ câu hỏi trắc nghiệm cho bài giảng này.'}
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {quiz.questions.map((q, qIndex) => {
-                    const selected = quizAnswers[qIndex];
-                    const isCorrect = selected === q.correct_index;
+                  {/* Mode Banner */}
+                  <div className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[11px] text-slate-600">
+                    <div className="flex items-center gap-1.5">
+                      <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
+                      <span className="font-semibold text-slate-800">Chế độ thi thử (Test Mode)</span>
+                    </div>
+                    <span>{quizSubmitted ? 'Đã hoàn thành kiểm tra' : `Đã chọn: ${answeredCount}/${totalQuestions}`}</span>
+                  </div>
+
+                  {quizQuestions.map((q, qIndex) => {
+                    const qId = String(q.id ?? qIndex + 1);
+                    const selectedOptionKey = quizAnswers[qId];
+                    const ansInfo = answerMap[qId];
+                    const hasAnswerKey = Boolean(ansInfo?.correct_answer);
+                    const optionsList = getQuestionOptions(q);
 
                     return (
-                      <div key={q.id || qIndex} className="p-4 rounded-xl border border-slate-200 bg-white">
-                        <h4 className="font-bold text-xs text-slate-900 mb-3 flex items-start gap-2">
-                          <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-mono text-[11px] shrink-0">
-                            Câu {qIndex + 1}
-                          </span>
-                          <span>{q.question}</span>
-                        </h4>
+                      <div key={q.id || qIndex} className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+                        {/* Header: Question Number, Difficulty, and Content */}
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <h4 className="font-bold text-xs text-slate-900 flex items-start gap-2 flex-1">
+                            <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-mono text-[11px] shrink-0">
+                              Câu {qIndex + 1}
+                            </span>
+                            <span className="leading-relaxed">{q.question}</span>
+                          </h4>
+                          {getDifficultyBadge(q.difficulty)}
+                        </div>
 
+                        {/* Options */}
                         <div className="space-y-2">
-                          {q.options.map((opt, optIndex) => {
-                            let optionClass = 'border-slate-200 bg-slate-50/50 hover:bg-slate-100';
+                          {optionsList.map((opt) => {
+                            let optionClass = 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-800';
+
                             if (quizSubmitted) {
-                              if (optIndex === q.correct_index) {
-                                optionClass = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-semibold';
-                              } else if (selected === optIndex && !isCorrect) {
-                                optionClass = 'border-rose-400 bg-rose-50 text-rose-900';
+                              if (hasAnswerKey) {
+                                if (opt.key === ansInfo.correct_answer) {
+                                  optionClass = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-semibold ring-1 ring-emerald-400';
+                                } else if (selectedOptionKey === opt.key && selectedOptionKey !== ansInfo.correct_answer) {
+                                  optionClass = 'border-rose-400 bg-rose-50 text-rose-900 font-medium';
+                                } else {
+                                  optionClass = 'border-slate-200 bg-slate-50/30 text-slate-400 opacity-70';
+                                }
+                              } else {
+                                if (selectedOptionKey === opt.key) {
+                                  optionClass = 'border-indigo-500 bg-indigo-50 text-indigo-900 font-semibold';
+                                }
                               }
-                            } else if (selected === optIndex) {
-                              optionClass = 'border-indigo-600 bg-indigo-50/70 text-indigo-900 font-medium ring-1 ring-indigo-500';
+                            } else if (selectedOptionKey === opt.key) {
+                              optionClass = 'border-indigo-600 bg-indigo-50/70 text-indigo-900 font-semibold ring-1 ring-indigo-500';
                             }
 
                             return (
                               <button
-                                key={optIndex}
+                                key={opt.key}
                                 type="button"
                                 disabled={quizSubmitted}
-                                onClick={() =>
-                                  setQuizAnswers((prev) => ({ ...prev, [qIndex]: optIndex }))
-                                }
-                                className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-center justify-between ${optionClass}`}
+                                onClick={() => handleSelectOption(qId, opt.key)}
+                                className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-center justify-between gap-2 ${optionClass}`}
                               >
-                                <span>{opt}</span>
-                                {quizSubmitted && optIndex === q.correct_index && (
+                                <div className="flex items-center gap-2">
+                                  <span className="w-5 h-5 rounded-md bg-white border border-slate-300 text-slate-700 font-bold text-[10px] flex items-center justify-center shrink-0">
+                                    {opt.key}
+                                  </span>
+                                  <span className="leading-relaxed">{opt.text}</span>
+                                </div>
+                                {quizSubmitted && hasAnswerKey && opt.key === ansInfo.correct_answer && (
                                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                                 )}
-                                {quizSubmitted && selected === optIndex && !isCorrect && (
+                                {quizSubmitted && hasAnswerKey && selectedOptionKey === opt.key && selectedOptionKey !== ansInfo.correct_answer && (
                                   <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
                                 )}
                               </button>
@@ -712,10 +910,16 @@ export function VideoDetailPage() {
                         </div>
 
                         {/* Explanation after submit */}
-                        {quizSubmitted && q.explanation && (
-                          <div className="mt-3 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
-                            <span className="font-bold text-slate-700">Giải thích: </span>
-                            {q.explanation}
+                        {quizSubmitted && ansInfo?.explanation && (
+                          <div className="mt-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
+                            <div className="font-bold text-slate-800 flex items-center gap-1.5 mb-1 text-[11px]">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Đáp án chính xác: Phương án {ansInfo.correct_answer}</span>
+                            </div>
+                            <p className="text-slate-600 text-[11px] leading-relaxed">
+                              <span className="font-semibold text-slate-700">Giải thích: </span>
+                              {ansInfo.explanation}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -725,35 +929,44 @@ export function VideoDetailPage() {
                   {/* Submit / Reset Actions */}
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                     {quizSubmitted ? (
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-bold text-slate-800">
-                          Kết quả:{' '}
-                          {
-                            Object.entries(quizAnswers).filter(
-                              ([idx, ans]) => ans === quiz.questions[idx]?.correct_index
-                            ).length
-                          }{' '}
-                          / {quiz.questions.length} câu đúng
-                        </span>
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div>
+                          <span className="text-xs font-bold text-slate-800">
+                            Kết quả kiểm tra:{' '}
+                            <span className={correctCount === totalQuestions ? 'text-emerald-600' : 'text-indigo-600'}>
+                              {correctCount} / {totalQuestions} câu đúng
+                            </span>
+                          </span>
+                          {correctCount === totalQuestions && (
+                            <span className="ml-2 text-[11px] text-emerald-600 font-semibold">🎉 Xuất sắc!</span>
+                          )}
+                        </div>
                         <button
                           onClick={() => {
                             setQuizAnswers({});
                             setQuizSubmitted(false);
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold shadow-sm transition-colors"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Làm lại Quiz</span>
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setQuizSubmitted(true)}
-                        disabled={Object.keys(quizAnswers).length < quiz.questions.length}
-                        className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all text-center"
-                      >
-                        Nộp bài & Kiểm tra đáp án
-                      </button>
+                      <div className="space-y-2 w-full">
+                        <button
+                          onClick={() => setQuizSubmitted(true)}
+                          disabled={answeredCount < totalQuestions}
+                          className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all text-center flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>
+                            {answeredCount < totalQuestions
+                              ? `Hãy chọn đáp án cho tất cả các câu (${answeredCount}/${totalQuestions})`
+                              : 'Nộp bài & Kiểm tra đáp án'}
+                          </span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
