@@ -1,0 +1,813 @@
+
+========== geminiVision.js ==========
+const { fetchGeminiWithRetry } = require("./geminiRetry");
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+
+/**
+ * Đọc một frame và trả về đánh giá nội dung.
+ * useful=false: frame không cung cấp nội dung trực quan hữu ích.
+ */
+async function describeFrame(frameBytes) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Thieu bien moi truong GEMINI_API_KEY");
+  }
+
+  if (!/^[a-zA-Z0-9._-]+$/.test(MODEL)) {
+    throw new Error("GEMINI_MODEL khong hop le");
+  }
+
+  if (!frameBytes || frameBytes.length === 0) {
+    throw new Error("Frame khong co noi dung");
+  }
+
+  if (frameBytes.length > 4 * 1024 * 1024) {
+    throw new Error("Frame vuot gioi han 4 MB");
+  }
+
+  const prompt = [
+    "Phân tích một khung hình trong video cho CloudTutor.",
+    "Chỉ dựa vào những gì có thể quan sát được trong ảnh.",
+    "Không suy đoán lời nói, danh tính hoặc diễn biến ngoài ảnh.",
+    "Không tự đặt mốc thời gian.",
+    "Trả về duy nhất một đối tượng JSON gồm:",
+    '"useful": boolean và "description": string.',
+    "Đặt useful là false nếu ảnh hoàn toàn trống, đen, trắng,",
+    "hoặc không có nội dung trực quan có thể mô tả hữu ích.",
+    "Khi useful là false, description phải là chuỗi rỗng.",
+    "Khi useful là true, description mô tả bằng tiếng Việt",
+    "những nội dung quan sát được trong ảnh.",
+  ].join(" ");
+
+  const endpoint =
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    `${MODEL}:generateContent`;
+
+  const response = await fetchGeminiWithRetry(endpoint, {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
+
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: Buffer.from(frameBytes).toString("base64"),
+              },
+            },
+          ],
+        },
+      ],
+
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+        responseMimeType: "application/json",
+      },
+    }),
+
+    // Timeout va retry duoc quan ly trong geminiRetry.
+  });
+
+  // Không ghi API key, header hoặc toàn bộ request vào log.
+  if (!response.ok) {
+    throw new Error(`Gemini API tra ve HTTP ${response.status}`);
+  }
+
+  const result = await response.json();
+  const candidate = result.candidates?.[0];
+
+  if (!candidate || candidate.finishReason !== "STOP") {
+    const reason =
+      candidate?.finishReason ||
+      result.promptFeedback?.blockReason ||
+      "UNKNOWN";
+
+    throw new Error(`Gemini khong tra ket qua hoan tat: ${reason}`);
+  }
+
+  const responseText = (candidate.content?.parts || [])
+    .filter((part) => part.text && !part.thought)
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+
+  let parsed;
+
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    throw new Error("Gemini tra ve JSON khong hop le");
+  }
+
+  if (
+    !parsed ||
+    typeof parsed.useful !== "boolean" ||
+    typeof parsed.description !== "string"
+  ) {
+    throw new Error("JSON Gemini thieu useful hoac description hop le");
+  }
+
+  const description = parsed.description.trim();
+
+  if (parsed.useful && !description) {
+    throw new Error("Gemini danh dau useful nhung mo ta rong");
+  }
+
+  return {
+    useful: parsed.useful,
+    text: parsed.useful ? description : "",
+    usage: result.usageMetadata || null,
+  };
+}
+
+module.exports = { describeFrame };
+
+========== geminiRetry.js ==========
+const RETRYABLE = new Set([408, 429, 500, 502, 503, 504]);
+
+function retryAfterMs(response, now) {
+  const value = response.headers?.get("retry-after");
+  if (!value) return 0;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const date = Date.parse(value);
+  return Number.isFinite(date) ? Math.max(0, date - now) : 0;
+}
+
+function safeError(code, status) {
+  const error = new Error(code);
+  error.code = code;
+  if (status !== undefined) error.status = status;
+  return error;
+}
+
+async function fetchGeminiWithRetry(url, options, dependencies = {}) {
+  const fetchImpl = dependencies.fetchImpl || globalThis.fetch;
+  const sleep = dependencies.sleep ||
+    (ms => new Promise(resolve => setTimeout(resolve, ms)));
+  const random = dependencies.random || Math.random;
+  const now = dependencies.now || Date.now;
+
+  const deadline = now() + 70000;
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const remaining = deadline - now();
+
+    if (remaining <= 0) {
+      throw safeError("GEMINI_RETRY_BUDGET_EXHAUSTED");
+    }
+
+    let response;
+    let networkFailure = false;
+
+    try {
+      response = await fetchImpl(url, {
+        ...options,
+        signal: AbortSignal.timeout(
+          Math.max(1, Math.min(20000, Math.floor(remaining)))
+        ),
+      });
+    } catch (error) {
+      if (!["TypeError", "TimeoutError", "AbortError"]
+        .includes(error.name)) {
+        throw error;
+      }
+
+      networkFailure = true;
+    }
+
+    // Lỗi cố định như 400/401/403 được trả về cho caller xử lý.
+    if (response && !RETRYABLE.has(response.status)) {
+      return response;
+    }
+
+    const status = response?.status;
+    const requestedWait = response
+      ? retryAfterMs(response, now())
+      : 0;
+
+    // Giải phóng body của response sẽ không sử dụng.
+    if (response?.body) {
+      try {
+        await response.body.cancel();
+      } catch {
+        // Không thay lỗi chính bằng lỗi giải phóng response.
+      }
+    }
+
+    if (attempt === 3) {
+      throw safeError(
+        networkFailure
+          ? "GEMINI_NETWORK_RETRIES_EXHAUSTED"
+          : "GEMINI_HTTP_RETRIES_EXHAUSTED",
+        status
+      );
+    }
+
+    const backoff = 1000 * (2 ** (attempt - 1))
+      + Math.floor(random() * 500);
+    const delay = Math.max(backoff, requestedWait);
+
+    // Để SQS retry ở lượt sau nếu server yêu cầu chờ dài.
+    if (delay > 5000 || delay + 1000 >= deadline - now()) {
+      throw safeError("GEMINI_RETRY_DEFERRED_TO_QUEUE", status);
+    }
+
+    // Không log URL, API key, request body hoặc mô tả frame.
+    console.warn(JSON.stringify({
+      event: "GEMINI_RETRY",
+      attempt,
+      status: status || "NETWORK_ERROR",
+      delay_ms: delay,
+    }));
+
+    await sleep(delay);
+  }
+}
+
+module.exports = { fetchGeminiWithRetry };
+
+========== onVisionFallback.js ==========
+const {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+} = require("@aws-sdk/client-s3");
+
+const { describeFrame } = require("./geminiVision");
+const { selectVisionFrames } = require("./selectVisionFrames");
+const { checkVisionJob } = require("./visionJobCheck");
+const { recoverVisionHandoff } = require("./recoverVisionHandoff");
+const { stageVisionResult } = require("./stageVisionResult");
+const { dispatchVisionHandoff } = require("./dispatchVisionHandoff");
+
+const {
+  isVisionEmptyAlreadyRecorded,
+  markVisionEmpty,
+} = require("./markVisionEmpty");
+const s3 = new S3Client({
+  region: process.env.AWS_REGION || "ap-southeast-1",
+});
+
+const bucket = process.env.MEDIA_BUCKET;
+const MAX_FRAME_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Chỉ chấp nhận thành phần ID an toàn để tạo S3 key.
+ */
+function validateIdentifier(value, name) {
+  if (
+    typeof value !== "string" ||
+    !/^[a-zA-Z0-9_-]+$/.test(value)
+  ) {
+    throw new Error(`${name} khong hop le`);
+  }
+}
+
+async function readFrame(frameKey) {
+  const result = await s3.send(
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: frameKey,
+    })
+  );
+
+  if (!result.Body) {
+    throw new Error("Frame khong co noi dung");
+  }
+
+  if (result.ContentLength > MAX_FRAME_BYTES) {
+    throw new Error("Frame vuot gioi han 4 MB");
+  }
+
+  const bytes = await result.Body.transformToByteArray();
+
+  if (bytes.length === 0 || bytes.length > MAX_FRAME_BYTES) {
+    throw new Error("Kich thuoc frame khong hop le");
+  }
+
+  return bytes;
+}
+
+/**
+ * Kiểm tra file Vision trước khi tái sử dụng.
+ *
+ * Kiểm tra schema không chứng minh mô tả của AI chính xác
+ * hoặc hữu ích về mặt nội dung.
+ */
+function validateVisionOutput(
+  output,
+  { jobId, ownerId, processingVersion }
+) {
+  if (
+    !output ||
+    output.schema_version !== "1.0" ||
+    output.job_id !== jobId ||
+    output.owner_id !== ownerId ||
+    output.processing_version !== processingVersion ||
+    output.source !== "VISION"
+  ) {
+    throw new Error("Metadata file Vision khong khop job");
+  }
+
+  if (
+    typeof output.text !== "string" ||
+    !output.text.trim() ||
+    !Array.isArray(output.segments) ||
+    output.segments.length === 0
+  ) {
+    throw new Error("File Vision khong co noi dung hop le");
+  }
+
+  for (const segment of output.segments) {
+    if (
+      typeof segment.text !== "string" ||
+      !segment.text.trim() ||
+      !Number.isFinite(segment.start_time) ||
+      !Number.isFinite(segment.end_time) ||
+      segment.start_time < 0 ||
+      segment.end_time <= segment.start_time ||
+      segment.source !== "VISION"
+    ) {
+      throw new Error("Segment Vision khong hop le");
+    }
+  }
+}
+
+/**
+ * Đọc file đã lưu. Chỉ trả null khi object không tồn tại.
+ * Các lỗi khác, ví dụ AccessDenied, tiếp tục được báo lỗi.
+ */
+async function readExistingOutput(outputKey, identity) {
+  try {
+    const result = await s3.send(
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: outputKey,
+      })
+    );
+
+    if (!result.Body) {
+      throw new Error("File Vision khong co noi dung");
+    }
+
+    const content = await result.Body.transformToString("utf-8");
+    const output = JSON.parse(content);
+
+    validateVisionOutput(output, identity);
+    return output;
+  } catch (err) {
+    const isNotFound =
+      err.name === "NoSuchKey" ||
+      err.$metadata?.httpStatusCode === 404;
+
+    if (isNotFound) {
+      return null;
+    }
+
+    throw err;
+  }
+}
+
+/**
+ * Lưu file chỉ khi key chưa tồn tại.
+ *
+ * Nếu một lượt khác đã lưu trước, đọc lại file đó.
+ */
+async function saveOutputOnce(outputKey, output, identity) {
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: outputKey,
+        ContentType: "application/json",
+        Body: JSON.stringify(output, null, 2),
+        IfNoneMatch: "*",
+      })
+    );
+
+    console.log("Da luu file Vision moi:", outputKey);
+
+    return output;
+  } catch (err) {
+    const isPreconditionFailed =
+      err.name === "PreconditionFailed" ||
+      err.$metadata?.httpStatusCode === 412;
+
+    if (!isPreconditionFailed) {
+      // Ví dụ lỗi mạng, AccessDenied hoặc xung đột 409:
+      // báo lỗi để lượt xử lý được thử lại.
+      throw err;
+    }
+
+    console.log("File Vision da ton tai, doc lai:", outputKey);
+
+    const existing = await readExistingOutput(outputKey, identity);
+
+    if (!existing) {
+      throw new Error("File Vision vua ton tai nhung khong doc duoc");
+    }
+
+    return existing;
+  }
+}
+
+async function processVision(event) {
+  if (!bucket) {
+    throw new Error("Thieu bien moi truong MEDIA_BUCKET");
+  }
+
+  const ownerId = event?.owner_id;
+  const jobId = event?.job_id;
+  const processingVersion = event?.processing_version;
+  const duration = Number(event?.duration_seconds);
+  const interval = Number(event?.frame_interval_seconds);
+
+  validateIdentifier(ownerId, "owner_id");
+  validateIdentifier(jobId, "job_id");
+  validateIdentifier(processingVersion, "processing_version");
+
+  const identity = {
+    jobId,
+    ownerId,
+    processingVersion,
+  };
+
+    if (await isVisionEmptyAlreadyRecorded(identity)) {
+    console.log("Vision rong da duoc ghi nhan truoc do:", jobId);
+
+    return {
+      skipped: true,
+      job_id: jobId,
+reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
+    };
+  }
+  // Kiểm tra checkpoint trước khi đọc frame hoặc gọi Gemini.
+  const recovery = await recoverVisionHandoff({
+    ...identity,
+    bucket,
+  });
+
+  if (recovery.action === "JOB_DELETED") {
+    console.log("Bo qua Vision vi job dang xoa hoac da xoa:", jobId);
+
+    return {
+      skipped: true,
+      job_id: jobId,
+      reason: "JOB_DELETED",
+    };
+  }
+
+  if (recovery.action === "HANDOFF_RECOVERED") {
+    console.log("Checkpoint Vision da duoc xu ly:", {
+      job_id: jobId,
+      handoff_state: recovery.handoff_state,
+      already_sent: recovery.already_sent,
+    });
+
+    return {
+      skipped: true,
+      job_id: jobId,
+      reason: "HANDOFF_RECOVERED",
+    };
+  }
+
+  if (recovery.action !== "PROCESS_VISION") {
+    throw new Error("Ket qua khoi phuc Vision khong hop le");
+  }
+
+  const jobCheck = await checkVisionJob(identity);
+
+  if (!jobCheck.allowed) {
+    if (jobCheck.reason === "JOB_DELETED") {
+      console.log("Bo qua Vision vi job dang xoa hoac da xoa:", jobId);
+
+      return {
+        skipped: true,
+        job_id: jobId,
+        reason: "JOB_DELETED",
+      };
+    }
+
+    throw new Error(`Khong the xu ly job Vision: ${jobCheck.reason}`);
+  }
+
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new Error("duration_seconds khong hop le");
+  }
+
+  if (!Number.isFinite(interval) || interval <= 0) {
+    throw new Error("frame_interval_seconds khong hop le");
+  }
+
+  // Tên file thử có version để không dùng nhầm kết quả phiên khác.
+  const outputKey =
+    `results/${ownerId}/${jobId}/vision-cache-v${processingVersion}.json`;
+
+  let output = await readExistingOutput(outputKey, identity);
+
+  if (output) {
+    console.log("Su dung lai ket qua Vision da luu:", outputKey);
+  } else {
+    // Giữ 1 frame trong giai đoạn kiểm thử.
+    const maxFrames = 3;
+
+    const frames = await selectVisionFrames({
+      bucket,
+      ownerId,
+      jobId,
+      interval,
+      duration,
+      maxFrames,
+    });
+
+    console.log("So frame duoc chon:", frames.length);
+
+    const segments = [];
+    const usage = [];
+
+    for (const frame of frames) {
+      const start = frame.index * interval;
+      const end = Math.min(start + interval, duration);
+
+      console.log("Dang xu ly frame:", frame.key);
+
+      const imageBytes = await readFrame(frame.key);
+      const result = await describeFrame(imageBytes);
+
+      usage.push({
+        frame_key: frame.key,
+        usage: result.usage,
+      });
+
+      if (!result.useful) {
+        console.log("Frame khong co noi dung huu ich:", frame.key);
+        continue;
+      }
+
+      segments.push({
+        start_time: start,
+        end_time: end,
+        text: result.text,
+        source: "VISION",
+        frame_key: frame.key,
+      });
+    }
+    if (segments.length === 0) {
+      await markVisionEmpty(identity);
+
+      console.log("Vision khong tim thay noi dung huu ich:", jobId);
+
+      return {
+        skipped: true,
+        job_id: jobId,
+        reason: "VISION_NO_USEFUL_SAMPLED_FRAMES",
+      };
+    }
+    output = {
+      schema_version: "1.0",
+      test: "VISION_CACHE_TEST",
+      job_id: jobId,
+      owner_id: ownerId,
+      processing_version: processingVersion,
+      source: "VISION",
+      text: segments.map((segment) => segment.text).join("\n\n"),
+      segments,
+      selected_frame_count: frames.length,
+      frame_interval_seconds: interval,
+      duration_seconds: duration,
+      usage,
+      warnings: [
+        "AI_GENERATED_VISUAL_DESCRIPTION",
+        "VISION_TIMESTAMPS_ARE_SAMPLED",
+        "VISION_CONTENT_FROM_SELECTED_FRAMES_ONLY",
+      ],
+    };
+
+    validateVisionOutput(output, identity);
+
+    output = await saveOutputOnce(
+      outputKey,
+      output,
+      identity
+    );
+  }
+
+  // Transaction chỉ thành công nếu job vẫn đang PROCESSING_VISION
+  // và đúng owner/version.
+  const checkpoint = await stageVisionResult({
+    jobId,
+    ownerId,
+    processingVersion,
+    transcriptKey: outputKey,
+  });
+
+  console.log("Da tao checkpoint Vision:", checkpoint);
+
+  const handoff = await dispatchVisionHandoff({
+    jobId,
+    ownerId,
+    processingVersion,
+    bucket,
+  });
+
+  console.log("Da xu ly ban giao Vision:", {
+    job_id: jobId,
+    handoff_state: handoff.handoff_state,
+    already_sent: handoff.already_sent,
+    message_id: handoff.message_id || null,
+  });
+
+  return {
+    job_id: jobId,
+    output_key: outputKey,
+    selected_frame_count: output.selected_frame_count,
+  };
+}
+
+exports.handler = async (event) => {
+  if (!Array.isArray(event?.Records) || event.Records.length === 0) {
+    throw new Error("Event khong co SQS Records");
+  }
+
+  for (const record of event.Records) {
+    if (record.eventSource !== "aws:sqs") {
+      throw new Error("Event khong phai tu SQS");
+    }
+
+    let message;
+
+    try {
+      message = JSON.parse(record.body);
+    } catch {
+      throw new Error("SQS message body khong phai JSON hop le");
+    }
+
+    const result = await processVision(message);
+
+    console.log("Ket qua xu ly message Vision:", {
+      message_id: record.messageId,
+      job_id: message.job_id,
+      skipped: result.skipped || false,
+      reason: result.reason || null,
+      output_key: result.output_key || null,
+    });
+  }
+
+  return { statusCode: 200 };
+};
+
+========== visionJobCheck.js ==========
+const {
+  DynamoDBClient,
+  GetItemCommand,
+} = require("@aws-sdk/client-dynamodb");
+
+const dynamodb = new DynamoDBClient({
+  region: process.env.AWS_REGION || "ap-southeast-1",
+});
+
+/**
+ * Đọc job trước khi xử lý Vision.
+ *
+ * Kết quả:
+ * - { allowed: true }: job đúng owner, version và trạng thái.
+ * - { allowed: false, reason: ... }: không xử lý message này.
+ *
+ * Lỗi truy cập DynamoDB sẽ được ném ra để cơ chế retry xử lý.
+ */
+async function checkVisionJob({
+  jobId,
+  ownerId,
+  processingVersion,
+}) {
+  const tableName =
+    process.env.JOBS_TABLE || "ddb-cloudtutor-jobs";
+
+  if (
+    typeof jobId !== "string" ||
+    !jobId ||
+    typeof ownerId !== "string" ||
+    !ownerId ||
+    typeof processingVersion !== "string" ||
+    !processingVersion
+  ) {
+    throw new Error("Thieu job_id, owner_id hoac processing_version");
+  }
+
+  const response = await dynamodb.send(
+    new GetItemCommand({
+      TableName: tableName,
+      Key: {
+        job_id: { S: jobId },
+      },
+      ConsistentRead: true,
+    })
+  );
+
+  const item = response.Item;
+
+  if (!item) {
+    return {
+      allowed: false,
+      reason: "JOB_NOT_FOUND",
+    };
+  }
+
+  const jobOwnerId = item.owner_id?.S;
+  const status = item.status?.S;
+  const jobVersion = item.processing_version?.S;
+
+  if (jobOwnerId !== ownerId) {
+    return {
+      allowed: false,
+      reason: "OWNER_MISMATCH",
+    };
+  }
+
+  if (status === "DELETING" || status === "DELETED") {
+    return {
+      allowed: false,
+      reason: "JOB_DELETED",
+    };
+  }
+
+  if (jobVersion !== processingVersion) {
+    return {
+      allowed: false,
+      reason: "PROCESSING_VERSION_MISMATCH",
+    };
+  }
+
+  if (status !== "PROCESSING_VISION") {
+    return {
+      allowed: false,
+      reason: "STATUS_NOT_PROCESSING_VISION",
+      status: status || null,
+    };
+  }
+
+  return {
+    allowed: true,
+    status,
+  };
+}
+
+module.exports = { checkVisionJob };
+
+========== lambda-cloudtutor-vision-fallback ==========
+{
+    "Name": "lambda-cloudtutor-vision-fallback",
+    "Role": "arn:aws:iam::251929332061:role/role-cloudtutor-vision-fallback",
+    "Timeout": 300,
+    "Runtime": "nodejs22.x",
+    "Vpc": null,
+    "Layers": [
+        "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"
+    ],
+    "Model": "gemini-3.5-flash-lite",
+    "SecretId": null,
+    "AiQueue": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-handoff-test-fb713c6d"
+}
+
+========== lambda-cloudtutor-test-vision-useful-d3f4e8a8 ==========
+{
+    "Name": "lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+    "Role": "arn:aws:iam::251929332061:role/role-cloudtutor-vision-fallback",
+    "Timeout": 300,
+    "Runtime": "nodejs22.x",
+    "Vpc": null,
+    "Layers": [
+        "arn:aws:lambda:ap-southeast-1:251929332061:layer:cloudtutor-node22-dependencies:1"
+    ],
+    "Model": "gemini-3.5-flash-lite",
+    "SecretId": null,
+    "AiQueue": "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-handoff-test-fb713c6d"
+}
+
+========== SECRET METADATA ==========
+[]
+
+========== DEPENDENCIES ==========
+{
+    "@aws-sdk/client-dynamodb":  "^3.1157.0",
+    "@aws-sdk/client-mediaconvert":  "^3.1152.0",
+    "@aws-sdk/client-rekognition":  "^3.1149.0",
+    "@aws-sdk/client-s3":  "^3.1149.0",
+    "@aws-sdk/client-sqs":  "^3.1151.0",
+    "@aws-sdk/client-transcribe":  "^3.1146.0"
+}

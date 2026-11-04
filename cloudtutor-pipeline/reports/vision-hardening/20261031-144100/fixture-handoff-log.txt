@@ -1,0 +1,32 @@
+START RequestId: 009a2ac3-b829-4757-b266-19a184de8ba0 Version: $LATEST
+2026-10-31T07:45:30.420Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	So frame duoc chon: 1
+2026-10-31T07:45:30.420Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	Dang xu ly frame: frames/test-user/vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e/source_frame.0000000.jpg
+2026-10-31T07:45:30.487Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	{"_aws":{"Timestamp":1793432730487,"CloudWatchMetrics":[{"Namespace":"CloudTutor/Vision","Dimensions":[["FunctionName","Model"]],"Metrics":[{"Name":"FrameCacheHits","Unit":"Count"}]}]},"FunctionName":"lambda-cloudtutor-test-vision-useful-d3f4e8a8","Model":"gemini-3.5-flash-lite","FrameCacheHits":1}
+2026-10-31T07:45:30.524Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	Da luu file Vision moi: results/test-user/vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e/vision-cache-v67415ba0bbe44c279dc6a7da250472ee.json
+2026-10-31T07:45:30.581Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	Da tao checkpoint Vision: {
+  job_id: 'vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e',
+  status: 'PROCESSING_AI',
+  vision_handoff_state: 'PENDING',
+  transcript_key: 'results/test-user/vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e/vision-cache-v67415ba0bbe44c279dc6a7da250472ee.json'
+}
+2026-10-31T07:45:30.646Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	Da gui cong viec AI: {
+  job_id: 'vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e',
+  handoff_id: 'test-user/vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e/v67415ba0bbe44c279dc6a7da250472ee',
+  message_id: '3876cd3b-f154-4c09-a3cd-37a65a30954a',
+  transcript_key: 'results/test-user/vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e/vision-cache-v67415ba0bbe44c279dc6a7da250472ee.json'
+}
+2026-10-31T07:45:30.653Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	Da xu ly ban giao Vision: {
+  job_id: 'vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e',
+  handoff_state: 'SENT',
+  already_sent: false,
+  message_id: '3876cd3b-f154-4c09-a3cd-37a65a30954a'
+}
+2026-10-31T07:45:30.668Z	009a2ac3-b829-4757-b266-19a184de8ba0	INFO	Ket qua xu ly message Vision: {
+  message_id: 'hardening-vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e',
+  job_id: 'vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e',
+  skipped: false,
+  reason: null,
+  output_key: 'results/test-user/vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e/vision-cache-v67415ba0bbe44c279dc6a7da250472ee.json'
+}
+END RequestId: 009a2ac3-b829-4757-b266-19a184de8ba0
+REPORT RequestId: 009a2ac3-b829-4757-b266-19a184de8ba0	Duration: 721.18 ms	Billed Duration: 722 ms	Memory Size: 512 MB	Max Memory Used: 126 MB	

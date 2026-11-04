@@ -1,0 +1,9 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"duration_seconds\":30.04,\"processing_version\":\"1\",\"frame_interval_seconds\":5,\"job_id\":\"vision-recovery-test-e3b998a4428047059deffd7f5c9369b9\",\"owner_id\":\"test-user\"}",
+                        "messageId":  "vision-handler-recovery-test-001",
+                        "eventSource":  "aws:sqs"
+                    }
+                ]
+}

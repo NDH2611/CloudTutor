@@ -1,0 +1,8 @@
+START RequestId: c99a3e50-3de8-475b-ac84-7ac654254ee2 Version: $LATEST
+2026-10-31T08:18:09.365Z	c99a3e50-3de8-475b-ac84-7ac654254ee2	WARN	{"event":"VIDEO_INPUT_REJECTED","job_id":"input-guard-test-7b9b1889c0274dddb07d91f07b4f8707","error_code":"VIDEO_EMPTY_OR_INVALID_SIZE"}
+2026-10-31T08:18:09.365Z	c99a3e50-3de8-475b-ac84-7ac654254ee2	INFO	Bo qua video event: {
+  job_id: 'input-guard-test-7b9b1889c0274dddb07d91f07b4f8707',
+  reason: 'VIDEO_EMPTY_OR_INVALID_SIZE'
+}
+END RequestId: c99a3e50-3de8-475b-ac84-7ac654254ee2
+REPORT RequestId: c99a3e50-3de8-475b-ac84-7ac654254ee2	Duration: 290.26 ms	Billed Duration: 668 ms	Memory Size: 512 MB	Max Memory Used: 104 MB	Init Duration: 376.97 ms	

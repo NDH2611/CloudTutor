@@ -1,0 +1,48 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522738596,
+      "message": "2026-11-01T08:45:38.596Z\td5685715-4a46-4ba2-a0c8-2713deadd61f\tINFO\tDa OCR frame: frames/test-user/m2-three-silent-text-e27353db/source_frame.0000000.jpg\n",
+      "ingestionTime": 1793522739853,
+      "eventId": "39996893601200240934145790301786614057284860909836894211"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522739106,
+      "message": "2026-11-01T08:45:39.106Z\td5685715-4a46-4ba2-a0c8-2713deadd61f\tINFO\tDa OCR frame: frames/test-user/m2-three-silent-text-e27353db/source_frame.0000001.jpg\n",
+      "ingestionTime": 1793522739853,
+      "eventId": "39996893612573620985396408103969830376335525277886906372"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522739596,
+      "message": "2026-11-01T08:45:39.596Z\td5685715-4a46-4ba2-a0c8-2713deadd61f\tINFO\tDa OCR frame: frames/test-user/m2-three-silent-text-e27353db/source_frame.0000002.jpg\n",
+      "ingestionTime": 1793522739853,
+      "eventId": "39996893623500986132676413443322332329933222415817310213"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522739662,
+      "message": "2026-11-01T08:45:39.662Z\td5685715-4a46-4ba2-a0c8-2713deadd61f\tINFO\tDa luu OCR: results/test-user/m2-three-silent-text-e27353db\n",
+      "ingestionTime": 1793522739853,
+      "eventId": "39996893624972835315779434570663689735928014275212017670"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522739787,
+      "message": "2026-11-01T08:45:39.787Z\td5685715-4a46-4ba2-a0c8-2713deadd61f\tINFO\tDa gui cong viec AI: {\n  job_id: 'm2-three-silent-text-e27353db',\n  handoff_id: 'test-user/m2-three-silent-text-e27353db/vd4189893-4a90-45d8-910b-45d87e25d8e3',\n  message_id: 'b324e43a-ecb1-48a8-a34e-ffce8aed5975',\n  transcript_key: 'results/test-user/m2-three-silent-text-e27353db/normalized-ocr.json'\n}\n",
+      "ingestionTime": 1793522739853,
+      "eventId": "39996893627760428465595762463355654520009059463459569672"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]937b69d096bf41dd9fa07c21dd576a75",
+      "timestamp": 1793522739793,
+      "message": "2026-11-01T08:45:39.793Z\td5685715-4a46-4ba2-a0c8-2713deadd61f\tINFO\tDa ban giao transcript OCR: m2-three-silent-text-e27353db\n",
+      "ingestionTime": 1793522739853,
+      "eventId": "39996893627894232936786946202204868829644949632495452169"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jConBDOd0WJVJ798O4iNY7aIk4hysn3lPGAWBYJiJxF7T9vVxj5qVGSot7g7lCwMEt944voDec1ELc4P7m4IyDPtNyg8kxXTgpcNlvcXF4MS0A8iv6uz16eOlOgxshHSIpmVavTqc3CTKsgFmb6JqHUlS3FlfN8x-fqaDT1opETFmesZGWycOfvzL-9EbuOrdy04MxfBVYAZ1_VVSbVIBeWtO-asOmehN9wLmng-NCd_ZcGwaEbNKXJToKRE3LYaMBMiyjstFqlucLuiaTpNx_f62EINh8E_Q8heYYxPDd1yZw"
+}

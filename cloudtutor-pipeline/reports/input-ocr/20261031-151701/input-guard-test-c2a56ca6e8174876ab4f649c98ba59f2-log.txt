@@ -1,0 +1,8 @@
+START RequestId: 6f432757-72fd-46f1-b510-636e90e4521e Version: $LATEST
+2026-10-31T08:18:14.325Z	6f432757-72fd-46f1-b510-636e90e4521e	WARN	{"event":"VIDEO_INPUT_REJECTED","job_id":"input-guard-test-c2a56ca6e8174876ab4f649c98ba59f2","error_code":"VIDEO_INVALID_MP4_HEADER"}
+2026-10-31T08:18:14.325Z	6f432757-72fd-46f1-b510-636e90e4521e	INFO	Bo qua video event: {
+  job_id: 'input-guard-test-c2a56ca6e8174876ab4f649c98ba59f2',
+  reason: 'VIDEO_INVALID_MP4_HEADER'
+}
+END RequestId: 6f432757-72fd-46f1-b510-636e90e4521e
+REPORT RequestId: 6f432757-72fd-46f1-b510-636e90e4521e	Duration: 140.64 ms	Billed Duration: 141 ms	Memory Size: 512 MB	Max Memory Used: 107 MB	

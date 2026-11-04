@@ -1,0 +1,71 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ConsumeVisionQueue",
+                          "Resource":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-vision-processing",
+                          "Action":  [
+                                         "sqs:ReceiveMessage",
+                                         "sqs:DeleteMessage",
+                                         "sqs:GetQueueAttributes"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "SendAiQueue",
+                          "Resource":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-ai-generation",
+                          "Action":  [
+                                         "sqs:SendMessage"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ListFramePrefix",
+                          "Resource":  "arn:aws:s3:::s3-cloudtutor-media-251929332061",
+                          "Condition":  {
+                                            "StringLike":  {
+                                                               "s3:prefix":  [
+                                                                                 "frames/*"
+                                                                             ]
+                                                           }
+                                        },
+                          "Action":  [
+                                         "s3:ListBucket"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ReadFramesAndResults",
+                          "Resource":  [
+                                           "arn:aws:s3:::s3-cloudtutor-media-251929332061/frames/*",
+                                           "arn:aws:s3:::s3-cloudtutor-media-251929332061/results/*"
+                                       ],
+                          "Action":  [
+                                         "s3:GetObject"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "WriteResults",
+                          "Resource":  [
+                                           "arn:aws:s3:::s3-cloudtutor-media-251929332061/results/*"
+                                       ],
+                          "Action":  [
+                                         "s3:PutObject"
+                                     ]
+                      },
+                      {
+                          "Effect":  "Allow",
+                          "Sid":  "ReadAndUpdatePipelineTables",
+                          "Resource":  [
+                                           "arn:aws:dynamodb:ap-southeast-1:251929332061:table/ddb-cloudtutor-jobs",
+                                           "arn:aws:dynamodb:ap-southeast-1:251929332061:table/ddb-cloudtutor-results"
+                                       ],
+                          "Action":  [
+                                         "dynamodb:GetItem",
+                                         "dynamodb:UpdateItem"
+                                     ]
+                      }
+                  ]
+}

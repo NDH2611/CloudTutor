@@ -1,0 +1,17 @@
+"use strict";
+const assert = require("node:assert/strict");
+const { classify, inspectDocument } = require("./classify");
+const job = { job_id: { S: "j" }, owner_id: { S: "u" }, processing_version: { S: "v1" }, status: { S: "PROCESSING_AI" }, text_handoff_state: { S: "SENT" }, vision_handoff_state: { S: "SENT" } };
+const result = { content_source: { S: "ASR" }, processing_version: { S: "v1" } };
+const doc = { schema_version: "1.0", job_id: "j", owner_id: "u", processing_version: "v1", source: "ASR", text: "hello", segments: [{ start_time: 0, end_time: 1, text: "hello", source: "ASR" }], warnings: [] };
+assert.equal(classify("ASR", job, result, doc).verdict, "M2_PASS");
+assert.equal(classify("ASR", { ...job, status: { S: "FAILED" }, error_code: { S: "AI_FAILED" } }, result, doc).verdict, "M2_PASS");
+assert.equal(classify("VISION", job, result, doc).verdict, "BRANCH_DIFFERS_REVIEW_INPUT");
+assert.equal(classify("ASR", job, result, { ...doc, text: "" }).verdict, "SOURCE_CONTRACT_INVALID");
+assert.equal(classify("ASR", job, { ...result, processing_version: { S: "old" } }, doc).verdict, "RESULT_VERSION_MISMATCH");
+assert.equal(classify("VISION", { ...job, status: { S: "FAILED" }, error_code: { S: "VISION_NO_USEFUL_SAMPLED_FRAMES" } }, null, null).verdict, "NO_USEFUL_SELECTED_FRAMES");
+assert.equal(classify("ASR", { ...job, status: { S: "FAILED" }, error_code: { S: "VIDEO_INVALID_MP4_HEADER" } }, null, null).area, "M2_STAGE");
+assert.equal(classify("VISION", { ...job, status: { S: "PROCESSING_VISION" }, vision_retry_state: { S: "WAITING" }, next_retry_at: { N: "1000" } }, null, null).verdict, "DEFERRED_RETRY_OR_QUOTA");
+assert.ok(inspectDocument({ ...doc, segments: [{ start_time: 2, end_time: 1, text: "x", source: "ASR" }] }, job, result).includes("INVALID_SEGMENT"));
+assert.equal(classify("ASR", { ...job, text_handoff_state: { S: "PENDING" } }, result, doc).verdict, "SOURCE_READY_HANDOFF_PENDING");
+console.log("PASS: 10 diagnostic-classifier checks; no AWS call.");

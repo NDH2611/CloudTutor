@@ -1,0 +1,7 @@
+{
+    "vision_queue_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-auto-test-19ee50af",
+    "vision_function":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+    "job_id":  "ocr-vision-chain-test-1d23abe3044c43b497d32cd0fdbeeb92",
+    "ocr_function":  "lambda-cloudtutor-test-ocr-c6491b01",
+    "owner_id":  "test-user"
+}

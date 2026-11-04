@@ -1,0 +1,20 @@
+{
+    "processing_version":  "1",
+    "schema_version":  "1.0",
+    "source":  "VISION",
+    "warnings":  [
+                     "AI_GENERATED_VISUAL_DESCRIPTION",
+                     "VISION_TIMESTAMPS_ARE_SAMPLED"
+                 ],
+    "owner_id":  "test-user",
+    "segments":  [
+                     {
+                         "end_time":  5,
+                         "source":  "VISION",
+                         "text":  "Mo ta hinh anh dung de kiem thu khoi phuc checkpoint.",
+                         "start_time":  0
+                     }
+                 ],
+    "job_id":  "vision-recovery-test-e3b998a4428047059deffd7f5c9369b9",
+    "text":  "Mo ta hinh anh dung de kiem thu khoi phuc checkpoint."
+}

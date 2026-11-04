@@ -1,0 +1,1 @@
+{"owner_id":{"S":"test-user"},"test_fixture":{"BOOL":true},"processing_version":{"S":"67415ba0bbe44c279dc6a7da250472ee"},"job_id":{"S":"vision-hardening-test-683c5a971e1943eaa47a12f9fe763c5e"},"status":{"S":"PROCESSING_VISION"},"updated_at":{"S":"2026-10-31T07:45:21.9651014Z"}}

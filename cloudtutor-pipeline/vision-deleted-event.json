@@ -1,0 +1,9 @@
+{
+    "Records":  [
+                    {
+                        "body":  "{\"duration_seconds\":30.04,\"processing_version\":\"1\",\"frame_interval_seconds\":5,\"job_id\":\"vision-deleted-test-ed04112811c04c4c88df42e7b67cfb72\",\"owner_id\":\"test-user\"}",
+                        "messageId":  "vision-deleted-test-001",
+                        "eventSource":  "aws:sqs"
+                    }
+                ]
+}

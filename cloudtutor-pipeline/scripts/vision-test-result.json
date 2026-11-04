@@ -1,0 +1,26 @@
+{
+    "description":  "Khung hình hiển thị một cảnh nền màu xanh dương có đốm sáng giống như bầu trời đêm. Phía dưới bên trái xuất hiện một đám mây màu hồng nhạt. Ở góc dưới bên phải, một nhân vật mặc áo khoác dài và quấn khăn choàng đang đứng ngước nhìn lên trên. Phía trên cùng có các dòng chữ \"Karaoke\", \"Em của quá khứ\" cùng hình ảnh một cây đàn guitar nhỏ. Dưới góc trái và phải có các dòng chữ lời bài hát được hiển thị.",
+    "source":  "VISION",
+    "usage_metadata":  {
+                           "promptTokenCount":  1401,
+                           "candidatesTokenCount":  111,
+                           "totalTokenCount":  1512,
+                           "promptTokensDetails":  [
+                                                       {
+                                                           "modality":  "TEXT",
+                                                           "tokenCount":  301
+                                                       },
+                                                       {
+                                                           "modality":  "IMAGE",
+                                                           "tokenCount":  1100
+                                                       }
+                                                   ],
+                           "serviceTier":  "standard"
+                       },
+    "image_file":  "vision-test.jpg",
+    "tested_at":  "2026-10-26T11:00:41.8064422Z",
+    "model":  "gemini-3.5-flash-lite",
+    "warnings":  [
+                     "AI_GENERATED_VISUAL_DESCRIPTION"
+                 ]
+}

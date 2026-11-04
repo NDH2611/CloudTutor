@@ -1,0 +1,1 @@
+{"test":"VISION_S3_SAVE_TEST","bucket":"s3-cloudtutor-media-251929332061","output_key":"results/test-user/ocr-auto-20261016-150459/vision-save-test.json","selected_frame_count":3,"warnings":["AI_GENERATED_VISUAL_DESCRIPTION","VISION_TIMESTAMPS_ARE_SAMPLED"]}

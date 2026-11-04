@@ -1,0 +1,1 @@
+{"secret_source":"SECRETS_MANAGER","first_cache_hit":false,"second_cache_hit":true,"useful":true,"usage":{"promptTokenCount":1232,"candidatesTokenCount":144,"totalTokenCount":1376,"promptTokensDetails":[{"modality":"TEXT","tokenCount":132},{"modality":"IMAGE","tokenCount":1100}],"serviceTier":"standard"},"model":"gemini-3.5-flash-lite"}

@@ -1,0 +1,1 @@
+{"RedrivePolicy":"{\"deadLetterTargetArn\":\"arn:aws:sqs:ap-southeast-1:251929332061:cloudtutor-m2-failure-monitoring-VisionTestDLQ-ZfIVNiwfkhAy\",\"maxReceiveCount\":5}"}

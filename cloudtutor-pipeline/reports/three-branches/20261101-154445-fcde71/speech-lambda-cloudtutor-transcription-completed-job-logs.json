@@ -1,0 +1,27 @@
+{
+  "events": [
+    {
+      "logStreamName": "2026/11/01/[$LATEST]1925127d57c1458f9e50a609e15a4e0f",
+      "timestamp": 1793522732675,
+      "message": "2026-11-01T08:45:32.675Z\tc7f4ecf4-8ac5-48b7-a0ff-2907501324a8\tINFO\tDa luu ket qua: results/test-user/m2-three-speech-e27353db\n",
+      "ingestionTime": 1793522735713,
+      "eventId": "39996893469157528613645970675748703938315968745830744066"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]1925127d57c1458f9e50a609e15a4e0f",
+      "timestamp": 1793522732947,
+      "message": "2026-11-01T08:45:32.947Z\tc7f4ecf4-8ac5-48b7-a0ff-2907501324a8\tINFO\tDa gui cong viec AI: {\n  job_id: 'm2-three-speech-e27353db',\n  handoff_id: 'test-user/m2-three-speech-e27353db/vb250902f-abdd-4807-828f-539420fe071e',\n  message_id: '1c2486a1-7f00-4fdf-b4ed-470ee2a36b28',\n  transcript_key: 'results/test-user/m2-three-speech-e27353db/normalized-transcript.json'\n}\n",
+      "ingestionTime": 1793522735713,
+      "eventId": "39996893475223331307646300170246419308476323075457417220"
+    },
+    {
+      "logStreamName": "2026/11/01/[$LATEST]1925127d57c1458f9e50a609e15a4e0f",
+      "timestamp": 1793522732958,
+      "message": "2026-11-01T08:45:32.958Z\tc7f4ecf4-8ac5-48b7-a0ff-2907501324a8\tINFO\tDa ban giao transcript ASR: m2-three-speech-e27353db\n",
+      "ingestionTime": 1793522735713,
+      "eventId": "39996893475468639504830137024803312209475455052023201797"
+    }
+  ],
+  "searchedLogStreams": [],
+  "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jCrRxnw-xspF4-hRe7SbKkAL7QqQRvXOjz6E5pmSrWYPYf7iHaw1p4I7veXkOibWwtsHChAgbO13wTfznCQxOLIuMFiSwHwYm2t2fXJAEz0ZB8LJX2wqTTkx8nHCWze2Uy27Udg3iQFw4-j0BrmTQGFKahO9wqLslOpnMM0v6kJv3nnTn2Rc6UOyGev7jVUnrDt9eCdXLXy2NImMvgBORQi34xQbGMCHpPJMGTt2-JbyV40msk7sbN6uM6ehsePlug4dwTh15dROY1W1WVfy681QEeaqBsRDKoa-XmSBv-GYbyDj5ll7_rZpi9vBXVzyZN8"
+}

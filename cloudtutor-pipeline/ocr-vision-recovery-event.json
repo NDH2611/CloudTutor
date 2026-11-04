@@ -1,0 +1,26 @@
+{
+    "detail":  {
+                   "jobId":  "mediaconvert-test-ocr-vision-recovery-46fa90846d0a4409a8cd3009647be5b0",
+                   "status":  "COMPLETE",
+                   "userMetadata":  {
+                                        "owner_id":  "test-user",
+                                        "stage":  "extract-frames",
+                                        "processing_version":  "1",
+                                        "job_id":  "ocr-vision-recovery-46fa90846d0a4409a8cd3009647be5b0",
+                                        "frame_interval_seconds":  "5",
+                                        "project":  "cloudtutor"
+                                    },
+                   "outputGroupDetails":  [
+                                              {
+                                                  "outputDetails":  [
+                                                                        {
+                                                                            "outputFilePaths":  [
+                                                                                                    "s3://s3-cloudtutor-media-251929332061/derived/test-user/ocr-vision-recovery-46fa90846d0a4409a8cd3009647be5b0/source_derived.mp4"
+                                                                                                ],
+                                                                            "durationInMs":  30040
+                                                                        }
+                                                                    ]
+                                              }
+                                          ]
+               }
+}

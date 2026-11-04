@@ -1,0 +1,216 @@
+{
+  "run_id": "m2-three-e27353db",
+  "started_at": "2026-11-01T08:45:16.065Z",
+  "scope": "REAL_MAIN_S3_NOTIFICATION_TO_M2_SOURCE_AND_SQS_HANDOFF_NOT_M3_ACCEPTANCE",
+  "cases": [
+    {
+      "name": "speech",
+      "expected_source": "ASR",
+      "job_id": "m2-three-speech-e27353db",
+      "video_key": "videos/test-user/m2-three-speech-e27353db/source.mp4",
+      "timeline": [
+        {
+          "observed_at": "2026-11-01T08:45:17.705Z",
+          "status": "UPLOADED",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:28.071Z",
+          "status": "PROCESSING_ASR",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:38.717Z",
+          "status": "PROCESSING_AI",
+          "source": "ASR",
+          "error_code": null,
+          "next_retry_at": null,
+          "handoff": "SENT",
+          "verdict": "M2_PASS",
+          "area": "M2_SOURCE_AND_HANDOFF",
+          "downstream_status": "PROCESSING_AI"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:49.420Z",
+          "status": "FAILED",
+          "source": "ASR",
+          "error_code": "GENERATE_SUMMARY_ERROR: Lỗi khi tạo summary bằng AI - 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Ple",
+          "next_retry_at": null,
+          "handoff": "SENT",
+          "verdict": "M2_PASS",
+          "area": "M2_SOURCE_AND_HANDOFF",
+          "downstream_status": "FAILED"
+        }
+      ],
+      "upload_attempted": true,
+      "uploaded_at": "2026-11-01T08:45:17.080Z",
+      "etag": "\"03a1b86ccf6de4e68dde179a99889600\"",
+      "source_read_error": null,
+      "assessment": {
+        "status": "FAILED",
+        "source": "ASR",
+        "error_code": "GENERATE_SUMMARY_ERROR: Lỗi khi tạo summary bằng AI - 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Ple",
+        "next_retry_at": null,
+        "handoff": "SENT",
+        "verdict": "M2_PASS",
+        "area": "M2_SOURCE_AND_HANDOFF",
+        "downstream_status": "FAILED"
+      },
+      "last_signature": "FAILED|M2_PASS|GENERATE_SUMMARY_ERROR: Lỗi khi tạo summary bằng AI - 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Ple|ASR",
+      "last_job": {
+        "status": "FAILED",
+        "transcription_job_name": "transcribe-cloudtutor-m2-three-speech-e27353db-b250902f-abdd-4807-828f-539420fe071e"
+      }
+    },
+    {
+      "name": "silent-text",
+      "expected_source": "OCR",
+      "job_id": "m2-three-silent-text-e27353db",
+      "video_key": "videos/test-user/m2-three-silent-text-e27353db/source.mp4",
+      "timeline": [
+        {
+          "observed_at": "2026-11-01T08:45:17.827Z",
+          "status": "UPLOADED",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:28.200Z",
+          "status": "PROCESSING_ASR",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:38.830Z",
+          "status": "PROCESSING_OCR",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:49.660Z",
+          "status": "PROCESSING_AI",
+          "source": "OCR",
+          "error_code": null,
+          "next_retry_at": null,
+          "handoff": "SENT",
+          "verdict": "M2_PASS",
+          "area": "M2_SOURCE_AND_HANDOFF",
+          "downstream_status": "PROCESSING_AI"
+        }
+      ],
+      "upload_attempted": true,
+      "uploaded_at": "2026-11-01T08:45:17.229Z",
+      "etag": "\"b765862ed40f34dba9a1b0f0bdaadec2\"",
+      "source_read_error": null,
+      "assessment": {
+        "status": "PROCESSING_AI",
+        "source": "OCR",
+        "error_code": null,
+        "next_retry_at": null,
+        "handoff": "SENT",
+        "verdict": "M2_PASS",
+        "area": "M2_SOURCE_AND_HANDOFF",
+        "downstream_status": "PROCESSING_AI"
+      },
+      "last_signature": "PROCESSING_AI|M2_PASS||OCR",
+      "last_job": {
+        "status": "PROCESSING_AI",
+        "transcription_job_name": "transcribe-cloudtutor-m2-three-silent-text-e27353db-d4189893-4a90-45d8-910b-45d87e25d8e3",
+        "ocr_mediaconvert_job_id": "1793522732539-qi7nh8"
+      }
+    },
+    {
+      "name": "silent-scene",
+      "expected_source": "VISION",
+      "job_id": "m2-three-silent-scene-e27353db",
+      "video_key": "videos/test-user/m2-three-silent-scene-e27353db/source.mp4",
+      "timeline": [
+        {
+          "observed_at": "2026-11-01T08:45:17.939Z",
+          "status": "UPLOADED",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:28.310Z",
+          "status": "PROCESSING_ASR",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:38.949Z",
+          "status": "PROCESSING_OCR",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:45:49.768Z",
+          "status": "PROCESSING_VISION",
+          "source": null,
+          "error_code": null,
+          "next_retry_at": null,
+          "verdict": "WAITING",
+          "area": "CHECK_STAGE_IF_TIMEOUT"
+        },
+        {
+          "observed_at": "2026-11-01T08:46:00.600Z",
+          "status": "PROCESSING_AI",
+          "source": "VISION",
+          "error_code": null,
+          "next_retry_at": null,
+          "handoff": "SENT",
+          "verdict": "M2_PASS",
+          "area": "M2_SOURCE_AND_HANDOFF",
+          "downstream_status": "PROCESSING_AI"
+        }
+      ],
+      "upload_attempted": true,
+      "uploaded_at": "2026-11-01T08:45:17.577Z",
+      "etag": "\"06a333a8e83fff79f852c573fc2e5b4c\"",
+      "source_read_error": null,
+      "assessment": {
+        "status": "PROCESSING_AI",
+        "source": "VISION",
+        "error_code": null,
+        "next_retry_at": null,
+        "handoff": "SENT",
+        "verdict": "M2_PASS",
+        "area": "M2_SOURCE_AND_HANDOFF",
+        "downstream_status": "PROCESSING_AI"
+      },
+      "last_signature": "PROCESSING_AI|M2_PASS||VISION",
+      "last_job": {
+        "status": "PROCESSING_AI",
+        "transcription_job_name": "transcribe-cloudtutor-m2-three-silent-scene-e27353db-81cf11b0-34fe-48c4-8ca0-a7bed0241b46",
+        "ocr_mediaconvert_job_id": "1793522739310-0uihwy"
+      }
+    }
+  ],
+  "checked_at": "2026-11-01T08:46:01.201Z"
+}

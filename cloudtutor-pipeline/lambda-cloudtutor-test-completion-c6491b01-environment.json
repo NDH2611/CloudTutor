@@ -1,0 +1,7 @@
+{
+    "Variables":  {
+                      "MEDIA_BUCKET":  "s3-cloudtutor-media-251929332061",
+                      "AI_QUEUE_URL":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-handoff-test-fb713c6d",
+                      "MEDIACONVERT_ROLE_ARN":  "arn:aws:iam::251929332061:role/role-cloudtutor-extract-frames"
+                  }
+}

@@ -1,0 +1,4 @@
+{
+    "ai_test_queue_url":  "https://sqs.ap-southeast-1.amazonaws.com/251929332061/sqs-cloudtutor-vision-handoff-test-fb713c6d",
+    "function_name":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8"
+}

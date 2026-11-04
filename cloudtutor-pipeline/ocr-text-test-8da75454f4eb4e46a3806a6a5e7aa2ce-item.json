@@ -1,0 +1,17 @@
+{
+    "test_fixture":  {
+                         "BOOL":  true
+                     },
+    "status":  {
+                   "S":  "PROCESSING_OCR"
+               },
+    "processing_version":  {
+                               "S":  "1"
+                           },
+    "job_id":  {
+                   "S":  "ocr-text-test-8da75454f4eb4e46a3806a6a5e7aa2ce"
+               },
+    "owner_id":  {
+                     "S":  "test-user"
+                 }
+}

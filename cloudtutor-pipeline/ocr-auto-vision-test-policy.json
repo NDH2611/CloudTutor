@@ -1,0 +1,10 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Resource":  "arn:aws:sqs:ap-southeast-1:251929332061:sqs-cloudtutor-vision-auto-test-19ee50af",
+                          "Action":  "sqs:SendMessage"
+                      }
+                  ]
+}

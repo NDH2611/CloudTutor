@@ -1,0 +1,12 @@
+{
+    "Label":  "OutputTokens",
+    "Datapoints":  [
+                       {
+                           "Timestamp":  "2026-10-31T14:44:00+07:00",
+                           "SampleCount":  1.0,
+                           "Average":  144.0,
+                           "Sum":  144.0,
+                           "Unit":  "Count"
+                       }
+                   ]
+}

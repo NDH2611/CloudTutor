@@ -1,0 +1,26 @@
+{
+    "original_filename":  {
+                              "S":  "vision-check-only.mp4"
+                          },
+    "processing_version":  {
+                               "S":  "1"
+                           },
+    "created_at":  {
+                       "S":  "2026-10-27T04:20:58.904Z"
+                   },
+    "owner_id":  {
+                     "S":  "test-user"
+                 },
+    "status":  {
+                   "S":  "PROCESSING_VISION"
+               },
+    "job_id":  {
+                   "S":  "vision-check-d9e343d9ceab4582a7e15db9c1dcda46"
+               },
+    "updated_at":  {
+                       "S":  "2026-10-27T04:20:58.904Z"
+                   },
+    "video_key":  {
+                      "S":  "videos/test-user/vision-check-d9e343d9ceab4582a7e15db9c1dcda46/source.mp4"
+                  }
+}

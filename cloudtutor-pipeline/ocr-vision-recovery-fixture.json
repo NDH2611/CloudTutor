@@ -1,0 +1,7 @@
+{
+    "vision_function":  "lambda-cloudtutor-test-vision-useful-d3f4e8a8",
+    "mediaconvert_job_id":  "mediaconvert-test-ocr-vision-recovery-46fa90846d0a4409a8cd3009647be5b0",
+    "job_id":  "ocr-vision-recovery-46fa90846d0a4409a8cd3009647be5b0",
+    "ocr_function":  "lambda-cloudtutor-test-ocr-c6491b01",
+    "owner_id":  "test-user"
+}

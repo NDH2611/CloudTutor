@@ -1,0 +1,6 @@
+{
+    "Variables":  {
+                      "TRANSCRIBE_LANGUAGE":  "en-US",
+                      "MEDIA_BUCKET":  "s3-cloudtutor-media-251929332061"
+                  }
+}

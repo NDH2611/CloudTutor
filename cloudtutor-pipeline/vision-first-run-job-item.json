@@ -1,0 +1,17 @@
+{
+    "test_fixture":  {
+                         "BOOL":  true
+                     },
+    "status":  {
+                   "S":  "PROCESSING_VISION"
+               },
+    "processing_version":  {
+                               "S":  "1"
+                           },
+    "job_id":  {
+                   "S":  "vision-first-run-test-9ac48cdd6cce4577901223b852669929"
+               },
+    "owner_id":  {
+                     "S":  "test-user"
+                 }
+}

@@ -1,0 +1,1 @@
+{"Item":{"error_code":{"S":"VIDEO_EMPTY_OR_INVALID_SIZE"},"job_id":{"S":"input-guard-test-7b9b1889c0274dddb07d91f07b4f8707"},"owner_id":{"S":"test-user"},"status":{"S":"FAILED"},"test_fixture":{"BOOL":true},"updated_at":{"S":"2026-10-31T08:18:09.346Z"},"video_key":{"S":"m2-input-tests/test-user/input-guard-test-7b9b1889c0274dddb07d91f07b4f8707/source.mp4"}}}

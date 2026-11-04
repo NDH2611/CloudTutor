@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "job_id": "m2-three-silent-text-e27353db",
+  "owner_id": "test-user",
+  "processing_version": "d4189893-4a90-45d8-910b-45d87e25d8e3",
+  "mediaconvert_job_id": "1793522732539-qi7nh8",
+  "source": "OCR",
+  "text": "CLOUD COMPUTING\nSTORAGE QUEUES AND FUNCTIONS\nSTUDENTS LEARN FROM VIDEO",
+  "segments": [
+    {
+      "start_time": 0,
+      "end_time": 12,
+      "text": "CLOUD COMPUTING\nSTORAGE QUEUES AND FUNCTIONS\nSTUDENTS LEARN FROM VIDEO",
+      "source": "OCR"
+    }
+  ],
+  "frame_interval_seconds": 5,
+  "frame_count": 3,
+  "duration_seconds": 12,
+  "needs_vision": false,
+  "warnings": [
+    "OCR_TIMESTAMPS_ARE_SAMPLED",
+    "OCR_TEXT_REQUIRES_REVIEW",
+    "OCR_LANGUAGE_SUPPORT_LIMITED"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "job_id": "m2-three-speech-e27353db",
+  "owner_id": "test-user",
+  "processing_version": "b250902f-abdd-4807-828f-539420fe071e",
+  "transcription_job_name": "transcribe-cloudtutor-m2-three-speech-e27353db-b250902f-abdd-4807-828f-539420fe071e",
+  "source": "ASR",
+  "text": "Welcome to Cloud Tutor. Today we learn about cloud computing. Cloud computing provides storage and processing over the internet. A queue allows services to exchange messages. This lesson explains a simple video processing pipeline.",
+  "segments": [
+    {
+      "start_time": 0.12,
+      "end_time": 1.4,
+      "text": "Welcome to Cloud Tutor.",
+      "source": "ASR"
+    },
+    {
+      "start_time": 2.36,
+      "end_time": 4.2,
+      "text": "Today we learn about cloud computing.",
+      "source": "ASR"
+    },
+    {
+      "start_time": 5.07,
+      "end_time": 8.59,
+      "text": "Cloud computing provides storage and processing over the internet.",
+      "source": "ASR"
+    },
+    {
+      "start_time": 9.45,
+      "end_time": 12.01,
+      "text": "A queue allows services to exchange messages.",
+      "source": "ASR"
+    },
+    {
+      "start_time": 12.9,
+      "end_time": 16.14,
+      "text": "This lesson explains a simple video processing pipeline.",
+      "source": "ASR"
+    }
+  ],
+  "needs_ocr": false,
+  "warnings": []
+}

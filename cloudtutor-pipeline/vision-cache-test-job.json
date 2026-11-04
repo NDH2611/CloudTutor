@@ -1,0 +1,17 @@
+{
+    "test_fixture":  {
+                         "BOOL":  true
+                     },
+    "status":  {
+                   "S":  "PROCESSING_VISION"
+               },
+    "processing_version":  {
+                               "S":  "1"
+                           },
+    "job_id":  {
+                   "S":  "vision-cache-test-da62f0d599dd4990b9907c8bdc3d469a"
+               },
+    "owner_id":  {
+                     "S":  "test-user"
+                 }
+}
