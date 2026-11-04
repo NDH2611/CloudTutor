@@ -1,6 +1,17 @@
 import axios from 'axios';
 import { INITIAL_MOCK_JOBS, MOCK_JOB_DETAILS } from './mockData';
 
+// Setup Axios 401 response interceptor for token expiration
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      window.dispatchEvent(new CustomEvent('cloudtutor:session_expired'));
+    }
+    return Promise.reject(error);
+  }
+);
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || !API_BASE_URL;
 

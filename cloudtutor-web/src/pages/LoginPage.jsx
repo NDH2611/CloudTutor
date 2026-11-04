@@ -15,7 +15,18 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/upload';
+  const isSessionExpired = new URLSearchParams(location.search).get('expired') === '1' || Boolean(location.state?.sessionExpired);
+  const from = location.state?.from?.pathname || '/videos';
+
+  const redirectAfterSuccess = () => {
+    const savedRedirect = sessionStorage.getItem('cloudtutor_redirect_after_login');
+    if (savedRedirect) {
+      sessionStorage.removeItem('cloudtutor_redirect_after_login');
+      navigate(savedRedirect, { replace: true });
+    } else {
+      navigate(from, { replace: true });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +36,7 @@ export function LoginPage() {
 
     try {
       await login(email, password);
-      navigate(from, { replace: true });
+      redirectAfterSuccess();
     } catch (err) {
       setError(err.message || 'Đăng nhập không thành công');
       if (err.code === 'UserNotConfirmedException') {
@@ -41,7 +52,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await quickDemoLogin();
-      navigate(from, { replace: true });
+      redirectAfterSuccess();
     } catch (err) {
       setError(err.message || 'Lỗi đăng nhập nhanh');
     } finally {
@@ -66,6 +77,19 @@ export function LoginPage() {
               Hệ thống xử lý học liệu đa định dạng trên Cloud
             </p>
           </div>
+
+          {/* Session Expired Notice */}
+          {isSessionExpired && (
+            <div className="mb-6 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs sm:text-sm flex items-start space-x-2.5 shadow-sm">
+              <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <span className="font-bold block">Phiên đăng nhập đã hết hạn</span>
+                <span className="text-amber-800 text-xs mt-0.5 block leading-relaxed">
+                  Để đảm bảo an toàn, hệ thống đã khóa phiên làm việc. Vui lòng đăng nhập lại để tiếp tục thao tác.
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Connection Mode Indicator */}
           {!isMockMode ? (

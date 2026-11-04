@@ -23,9 +23,6 @@ export function Navbar() {
                 <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 bg-clip-text text-transparent">
                   CloudTutor
                 </span>
-                <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/50">
-                  Week 1 Demo
-                </span>
               </div>
             </Link>
           </div>

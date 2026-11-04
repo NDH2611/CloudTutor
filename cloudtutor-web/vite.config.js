@@ -9,7 +9,14 @@ export default defineConfig({
     global: 'globalThis',
   },
   server: {
-    port: 3000,
-    open: false
+    port: 5173,
+    open: false,
+    proxy: {
+      '/api': {
+        target: 'https://k2ur8947qi.execute-api.ap-southeast-1.amazonaws.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   }
 });

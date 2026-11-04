@@ -19,6 +19,8 @@ import {
   Volume2,
   Image,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   RotateCcw,
   Search,
   Check,
@@ -44,6 +46,9 @@ export function VideoDetailPage() {
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
+  // Stepper collapsed state for completed jobs
+  const [showCompletedStepper, setShowCompletedStepper] = useState(false);
+
   // Load / Polling function
   const loadDetail = async (showLoadingSpinner = false) => {
     if (showLoadingSpinner) setLoading(true);
@@ -67,8 +72,8 @@ export function VideoDetailPage() {
   // Smart Short Polling: Automatically poll every 3.5s if job is in active processing states
   useEffect(() => {
     if (!job) return;
-    const isProcessing = ['CREATED', 'QUEUED', 'TRANSCRIBING', 'PROCESSING_OCR', 'PROCESSING_AI'].includes(job.status);
-    if (!isProcessing) return;
+    const isTerminal = ['COMPLETED', 'COMPLETED_WITH_WARNING', 'FAILED', 'DELETED', 'DELETING'].includes(job.status);
+    if (isTerminal) return;
 
     const interval = setInterval(() => {
       loadDetail(false);
@@ -138,17 +143,29 @@ export function VideoDetailPage() {
     if (!job) return 'upcoming';
     const status = job.status;
 
-    // Steps: 0: Uploaded, 1: Transcribing/OCR, 2: AI Processing, 3: Completed
+    // Steps: 0: Ingest, 1: Transcribe/OCR, 2: AI Processing, 3: Completed
     if (status === 'COMPLETED' || status === 'COMPLETED_WITH_WARNING') return 'completed';
-    if (status === 'FAILED') return 'failed';
+    if (status === 'FAILED') {
+      return stepIndex === 3 ? 'failed' : 'completed';
+    }
 
-    if (stepIndex === 0) return 'completed'; // S3 upload is already done if job exists
+    if (stepIndex === 0) {
+      if (['CREATED', 'UPLOADING'].includes(status)) return 'current';
+      return 'completed'; // UPLOADED, QUEUED, etc.
+    }
     if (stepIndex === 1) {
-      if (status === 'QUEUED' || status === 'TRANSCRIBING' || status === 'PROCESSING_OCR') return 'current';
-      if (status === 'PROCESSING_AI') return 'completed';
+      if (['CREATED', 'UPLOADING'].includes(status)) return 'upcoming';
+      if (['UPLOADED', 'QUEUED', 'TRANSCRIBING', 'SUBMITTED', 'PROCESSING_OCR', 'EXTRACTING_FRAMES'].includes(status)) return 'current';
+      return 'completed'; // PROCESSING_AI or later
     }
     if (stepIndex === 2) {
       if (status === 'PROCESSING_AI') return 'current';
+      if (['COMPLETED', 'COMPLETED_WITH_WARNING'].includes(status)) return 'completed';
+      return 'upcoming';
+    }
+    if (stepIndex === 3) {
+      if (['COMPLETED', 'COMPLETED_WITH_WARNING'].includes(status)) return 'completed';
+      return 'upcoming';
     }
     return 'upcoming';
   };
@@ -180,8 +197,10 @@ export function VideoDetailPage() {
     );
   }
 
-  const isProcessing = ['CREATED', 'QUEUED', 'TRANSCRIBING', 'PROCESSING_OCR', 'PROCESSING_AI'].includes(job.status);
+  const isTerminal = ['COMPLETED', 'COMPLETED_WITH_WARNING', 'FAILED', 'DELETED', 'DELETING'].includes(job.status);
+  const isProcessing = !isTerminal;
   const isCompleted = ['COMPLETED', 'COMPLETED_WITH_WARNING'].includes(job.status);
+  const isFailed = job.status === 'FAILED';
   const chunks = job.chunks || [];
   const summary = job.summary || null;
   const quiz = job.quiz || null;
@@ -257,7 +276,7 @@ export function VideoDetailPage() {
         </div>
       )}
 
-      {/* In-Progress Pipeline Stepper View */}
+      {/* Pipeline Stepper View: In-Progress, Collapsible Completed, or Failed */}
       {isProcessing && (
         <div className="mb-8 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -291,6 +310,8 @@ export function VideoDetailPage() {
                       ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                       : status === 'current'
                       ? 'bg-indigo-50 border-indigo-300 text-indigo-900 ring-2 ring-indigo-200 shadow-sm'
+                      : status === 'failed'
+                      ? 'bg-rose-50 border-rose-200 text-rose-900'
                       : 'bg-slate-50 border-slate-200 text-slate-400'
                   }`}
                 >
@@ -298,6 +319,129 @@ export function VideoDetailPage() {
                     <span className="text-xs font-bold">{step.title}</span>
                     {status === 'completed' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                     {status === 'current' && <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />}
+                    {status === 'failed' && <XCircle className="w-4 h-4 text-rose-600" />}
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-80">{step.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Completed State: Compact summary bar with toggle */}
+      {isCompleted && !showCompletedStepper && (
+        <div className="mb-6 px-4 py-2.5 bg-emerald-50/80 rounded-2xl border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 shadow-sm">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold">Pipeline xử lý thành công</span>
+            <span className="text-emerald-700 hidden sm:inline">• Đã hoàn tất 4/4 bước phân tích học liệu trên Cloud</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+              {job.status}
+            </span>
+            <button
+              onClick={() => setShowCompletedStepper(true)}
+              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 ml-2"
+            >
+              <span>Xem chi tiết pipeline</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Completed State: Expanded Stepper view */}
+      {isCompleted && showCompletedStepper && (
+        <div className="mb-8 p-6 bg-white rounded-2xl border border-emerald-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Pipeline Đã Xử Lý Hoàn Tất Trên Cloud (4/4 Bước)
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Toàn bộ dữ liệu học liệu (Video, Transcript, Summary, Quiz) đã sẵn sàng.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {job.status}
+              </span>
+              <button
+                onClick={() => setShowCompletedStepper(false)}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+              >
+                <span>Thu gọn</span>
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
+            {[
+              { title: '1. S3 Video Ingest', desc: 'S3 Event đẩy vào hàng đợi SQS' },
+              { title: '2. Transcribe / OCR', desc: 'Tách lời nói hoặc bóc khung hình' },
+              { title: '3. Bedrock AI', desc: 'Sinh Summary & Bộ câu hỏi Quiz' },
+              { title: '4. Sẵn sàng học tập', desc: 'Lưu kết quả DynamoDB Results' }
+            ].map((step, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-900"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold">{step.title}</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-80">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Failed State: Stepper view */}
+      {isFailed && (
+        <div className="mb-8 p-6 bg-white rounded-2xl border border-rose-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-rose-900 flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-rose-600" />
+                Pipeline Gặp Lỗi Khi Xử Lý
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {job.error_message || job.error_code || 'Không thể hoàn tất toàn bộ quy trình xử lý học liệu.'}
+              </p>
+            </div>
+            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+              FAILED
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
+            {[
+              { title: '1. S3 Video Ingest', desc: 'S3 Event đẩy vào hàng đợi SQS' },
+              { title: '2. Transcribe / OCR', desc: 'Tách lời nói hoặc bóc khung hình' },
+              { title: '3. Bedrock AI', desc: 'Sinh Summary & Bộ câu hỏi Quiz' },
+              { title: '4. Sẵn sàng học tập', desc: 'Lưu kết quả DynamoDB Results' }
+            ].map((step, idx) => {
+              const status = getStepStatus(idx);
+              return (
+                <div
+                  key={idx}
+                  className={`p-4 rounded-xl border transition-all ${
+                    status === 'failed'
+                      ? 'bg-rose-50 border-rose-300 text-rose-900 ring-2 ring-rose-200 shadow-sm'
+                      : status === 'completed'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      : 'bg-slate-50 border-slate-200 text-slate-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold">{step.title}</span>
+                    {status === 'failed' && <XCircle className="w-4 h-4 text-rose-600" />}
+                    {status === 'completed' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                   </div>
                   <p className="text-[11px] leading-relaxed opacity-80">{step.desc}</p>
                 </div>

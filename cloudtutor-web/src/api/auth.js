@@ -248,3 +248,83 @@ export function sdkLogout(email) {
     cognitoUser.signOut();
   }
 }
+
+/**
+ * Helper to check if a JWT token is expired (or close to expiring within 30s)
+ */
+export function isTokenExpired(token) {
+  if (!token) return true;
+  if (token.startsWith('mock-')) {
+    const parts = token.split('-');
+    if (parts.length >= 4) {
+      const timestamp = parseInt(parts[3], 10);
+      if (timestamp && Date.now() - timestamp > 4 * 3600 * 1000) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return true;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const { exp } = JSON.parse(jsonPayload);
+    if (!exp) return false;
+    return Date.now() >= exp * 1000 - 30000;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Refresh Cognito session silently using refresh token
+ */
+export async function sdkRefreshSession() {
+  if (!userPool) {
+    const stored = localStorage.getItem('cloudtutor_auth_session');
+    if (!stored) throw new Error('NO_SESSION');
+    const parsed = JSON.parse(stored);
+    return {
+      idToken: parsed.idToken,
+      accessToken: parsed.accessToken,
+      user: parsed.user,
+      isMock: true
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+    const cognitoUser = userPool.getCurrentUser();
+    if (!cognitoUser) {
+      return reject(new Error('NO_CURRENT_USER'));
+    }
+
+    cognitoUser.getSession((err, session) => {
+      if (err || !session || !session.isValid()) {
+        return reject(err || new Error('SESSION_INVALID'));
+      }
+
+      const idToken = session.getIdToken().getJwtToken();
+      const accessToken = session.getAccessToken().getJwtToken();
+      const payload = session.getIdToken().decodePayload();
+
+      resolve({
+        idToken,
+        accessToken,
+        user: {
+          username: payload['cognito:username'] || payload.email,
+          email: payload.email,
+          sub: payload.sub,
+          name: payload.name || payload.email
+        },
+        isMock: false
+      });
+    });
+  });
+}

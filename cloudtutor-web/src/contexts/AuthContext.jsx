@@ -5,6 +5,8 @@ import {
   sdkConfirmCode,
   sdkResendCode,
   sdkLogout,
+  sdkRefreshSession,
+  isTokenExpired,
   isCognitoConfigured,
   getCognitoConfig
 } from '../api/auth';
@@ -20,34 +22,114 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isMockMode, setIsMockMode] = useState(!isCognitoConfigured);
 
-  // Restore session from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const session = JSON.parse(stored);
-        // If live Cognito is active now, clear any previous mock sessions
-        if (isCognitoConfigured && session.isMock) {
-          localStorage.removeItem(AUTH_STORAGE_KEY);
-          setUser(null);
-          setIdToken(null);
-          setAccessToken(null);
-          setIsMockMode(false);
-        } else {
-          setUser(session.user);
-          setIdToken(session.idToken);
-          setAccessToken(session.accessToken);
-          setIsMockMode(session.isMock ?? !isCognitoConfigured);
-        }
-      } else {
-        setIsMockMode(!isCognitoConfigured);
-      }
-    } catch (e) {
-      console.error('Failed to parse cached auth session:', e);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    } finally {
-      setIsLoading(false);
+  const triggerSessionExpired = () => {
+    console.warn('Session has expired. Clearing local session and redirecting to login...');
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    setUser(null);
+    setIdToken(null);
+    setAccessToken(null);
+
+    const currentPath = window.location.pathname + window.location.search;
+    if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+      sessionStorage.setItem('cloudtutor_redirect_after_login', currentPath);
+      window.location.href = '/login?expired=1';
     }
+  };
+
+  // Restore session from localStorage on mount and check validity
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+        if (stored) {
+          const session = JSON.parse(stored);
+          // If live Cognito is active now, clear any previous mock sessions
+          if (isCognitoConfigured && session.isMock) {
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+            setUser(null);
+            setIdToken(null);
+            setAccessToken(null);
+            setIsMockMode(false);
+          } else if (isTokenExpired(session.idToken)) {
+            console.warn('Cached token is expired, attempting silent refresh on startup...');
+            try {
+              const refreshed = await sdkRefreshSession();
+              setUser(refreshed.user);
+              setIdToken(refreshed.idToken);
+              setAccessToken(refreshed.accessToken);
+              setIsMockMode(refreshed.isMock ?? !isCognitoConfigured);
+              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(refreshed));
+            } catch (err) {
+              console.warn('Startup session refresh failed:', err);
+              triggerSessionExpired();
+            }
+          } else {
+            setUser(session.user);
+            setIdToken(session.idToken);
+            setAccessToken(session.accessToken);
+            setIsMockMode(session.isMock ?? !isCognitoConfigured);
+          }
+        } else {
+          setIsMockMode(!isCognitoConfigured);
+        }
+      } catch (e) {
+        console.error('Failed to parse cached auth session:', e);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  // Periodic check for token expiration
+  useEffect(() => {
+    if (!idToken) return;
+
+    const interval = setInterval(async () => {
+      if (isTokenExpired(idToken)) {
+        console.warn('ID Token expired or near expiry, attempting silent refresh...');
+        try {
+          const refreshed = await sdkRefreshSession();
+          setUser(refreshed.user);
+          setIdToken(refreshed.idToken);
+          setAccessToken(refreshed.accessToken);
+          setIsMockMode(refreshed.isMock ?? !isCognitoConfigured);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+            user: refreshed.user,
+            idToken: refreshed.idToken,
+            accessToken: refreshed.accessToken,
+            isMock: refreshed.isMock ?? !isCognitoConfigured
+          }));
+        } catch (err) {
+          console.error('Token refresh failed, session expired:', err);
+          triggerSessionExpired();
+        }
+      }
+    }, 30000); // Check every 30s
+
+    return () => clearInterval(interval);
+  }, [idToken]);
+
+  // Handle global 401 Unauthorized events from API requests
+  useEffect(() => {
+    const handleExpiredEvent = async () => {
+      console.warn('Received 401 event from API. Attempting token refresh...');
+      try {
+        const refreshed = await sdkRefreshSession();
+        setUser(refreshed.user);
+        setIdToken(refreshed.idToken);
+        setAccessToken(refreshed.accessToken);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(refreshed));
+      } catch (err) {
+        console.error('Refresh failed following 401 error:', err);
+        triggerSessionExpired();
+      }
+    };
+
+    window.addEventListener('cloudtutor:session_expired', handleExpiredEvent);
+    return () => window.removeEventListener('cloudtutor:session_expired', handleExpiredEvent);
   }, []);
 
   const login = async (email, password) => {
