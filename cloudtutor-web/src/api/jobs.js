@@ -420,3 +420,51 @@ export async function getPublicShareDetail(shareToken) {
   const res = await axios.get(`${API_BASE_URL}/public/share/${shareToken}`);
   return res.data;
 }
+
+
+/**
+ * Ask AI a question about the lecture
+ * Contract: POST /jobs/{id}/questions
+ * Body: { job_id, question }
+ * Returns: { job_id, question, answer, provider, status }
+ */
+export async function askJobQuestion(jobId, question, token = '') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 600));
+    const qLower = (question || '').toLowerCase();
+    let answer = '';
+
+    if (qLower.includes('nội dung gì') || qLower.includes('về cái gì') || qLower.includes('giới thiệu')) {
+      answer = 'Bài giảng này trình bày về kiến trúc Transformer trong Trí tuệ nhân tạo (AI), xuất phát từ nghiên cứu năm 2017 "Attention Is All You Need". Video giải thích cơ chế Self-Attention giúp mô hình hiểu mối quan hệ ngữ cảnh giữa các từ ngữ mà không cần xử lý tuần tự từng từ như RNN truyền thống.';
+    } else if (qLower.includes('tóm tắt') || qLower.includes('ý chính') || qLower.includes('luận điểm')) {
+      answer = 'Dưới đây là 3 luận điểm cốt lõi của bài giảng:\n1. Mạng nơ-ron hồi quy (RNN) cũ đọc từng từ một, khiến việc huấn luyện song song bị giới hạn và khó nắm bắt quan hệ khoảng cách xa.\n2. Cơ chế Self-Attention của Transformer sử dụng Query, Key, Value để tính toán trọng số liên hệ giữa mọi từ trong một bước duy nhất.\n3. Multi-Head Attention và Positional Encoding giúp mô hình quan sát nhiều khía cạnh cùng lúc và nhận biết được thứ tự từ trong câu.';
+    } else if (qLower.includes('khái niệm') || qLower.includes('thuật ngữ') || qLower.includes('transformer')) {
+      answer = 'Các khái niệm kỹ thuật chính trong bài giảng gồm:\n• Query, Key, Value: Ba thành phần toán học để chấm điểm sự tương quan giữa các từ.\n• Softmax: Hàm chuẩn hóa điểm số thành các trọng số xác suất.\n• Multi-Head Attention: 8 đầu chú ý chạy song song để nhìn ngữ cảnh theo các góc độ khác nhau.\n• Positional Encoding: Vector sóng hình sin/cosin bù đắp thông tin vị trí cho mô hình.';
+    } else {
+      answer = `Dựa trên nội dung bài giảng, đối với câu hỏi "${question}": Hệ thống AI đã phân tích từ transcript và nhận thấy bài giảng tập trung giải thích cách kiến trúc Transformer giải quyết bài toán biểu diễn ngữ cảnh và nâng cao hiệu suất huấn luyện so với các mô hình trước đây.`;
+    }
+
+    return {
+      job_id: jobId,
+      question: question,
+      answer: answer,
+      provider: 'Gemini',
+      status: 'SUCCESS'
+    };
+  }
+
+  const res = await axios.post(
+    `${API_BASE_URL}/jobs/${jobId}/questions`,
+    {
+      job_id: jobId,
+      question: question
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return res.data;
+}

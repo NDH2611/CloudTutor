@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getJobDetail, getPublicShareDetail } from '../api/jobs';
+import { getJobDetail, getPublicShareDetail, askJobQuestion } from '../api/jobs';
 import { ShareModal } from '../components/ShareModal';
+import { FormattedAiMessage } from '../components/FormattedAiMessage';
 import {
   ArrowLeft,
   RefreshCw,
@@ -26,7 +27,14 @@ import {
   Search,
   Check,
   Cpu,
-  Share2
+  Share2,
+  MessageSquare,
+  Send,
+  Bot,
+  User,
+  Trash2,
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 
 export function VideoDetailPage({ isPublicShare = false }) {
@@ -40,7 +48,7 @@ export function VideoDetailPage({ isPublicShare = false }) {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('transcript'); // 'transcript' | 'summary' | 'quiz'
+  const [activeTab, setActiveTab] = useState('transcript'); // 'transcript' | 'summary' | 'quiz' | 'qna'
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Video Player state
@@ -52,6 +60,44 @@ export function VideoDetailPage({ isPublicShare = false }) {
   // Quiz state: { [questionId]: selectedOptionKey }
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  // Chat Q&A state
+  const chatStorageKey = jobId ? `cloudtutor_chat_${jobId}` : null;
+  const [chatMessages, setChatMessages] = useState(() => {
+    if (!chatStorageKey) return [];
+    try {
+      const stored = localStorage.getItem(chatStorageKey);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [inputQuestion, setInputQuestion] = useState('');
+  const [isAsking, setIsAsking] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const chatMessagesEndRef = useRef(null);
+
+  // Sync chat messages to localStorage per lecture
+  useEffect(() => {
+    if (chatStorageKey) {
+      try {
+        localStorage.setItem(chatStorageKey, JSON.stringify(chatMessages));
+      } catch (e) {
+        console.warn('Failed to save chat to localStorage:', e);
+      }
+    }
+  }, [chatMessages, chatStorageKey]);
+
+  // Auto-scroll chat to bottom
+  const scrollToChatBottom = () => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (activeTab === 'qna') {
+      scrollToChatBottom();
+    }
+  }, [chatMessages, activeTab, isAsking]);
 
   // Save to recent lecture whenever job data is successfully loaded
   useEffect(() => {
@@ -175,6 +221,71 @@ export function VideoDetailPage({ isPublicShare = false }) {
         return 'Video dài hơn mức trích xuất khung hình tối đa của phiên thử nghiệm.';
       default:
         return `Cảnh báo hệ thống: ${warningCode}`;
+    }
+  };
+
+  // Handle Q&A send message
+  const handleSendQuestion = async (customQuestion = null) => {
+    const qText = (typeof customQuestion === 'string' ? customQuestion : inputQuestion).trim();
+    if (!qText || isAsking || !jobId) return;
+
+    const userMsg = {
+      id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      sender: 'user',
+      text: qText,
+      timestamp: new Date().toISOString()
+    };
+
+    setChatMessages((prev) => [...prev, userMsg]);
+    setInputQuestion('');
+    setIsAsking(true);
+    setChatError('');
+
+    try {
+      const res = await askJobQuestion(jobId, qText, idToken);
+      const aiMsg = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        sender: 'ai',
+        text: res.answer || 'Hệ thống đã phân tích bài giảng nhưng không tìm thấy thông tin phù hợp.',
+        provider: res.provider || 'Gemini',
+        status: res.status || 'SUCCESS',
+        timestamp: new Date().toISOString()
+      };
+      setChatMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error('Failed to ask question:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'Không thể kết nối đến máy chủ AI.';
+      setChatError(errorMsg);
+      const aiErrorMsg = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        sender: 'ai',
+        isError: true,
+        text: `Đã có lỗi xảy ra: ${errorMsg}. Vui lòng thử lại.`,
+        provider: 'Hệ thống',
+        timestamp: new Date().toISOString()
+      };
+      setChatMessages((prev) => [...prev, aiErrorMsg]);
+    } finally {
+      setIsAsking(false);
+    }
+  };
+
+  // Handle clearing chat history
+  const handleClearChat = () => {
+    if (window.confirm('Bạn có chắc muốn xóa toàn bộ lịch sử hỏi đáp của bài giảng này?')) {
+      setChatMessages([]);
+      setChatError('');
+      if (chatStorageKey) {
+        localStorage.removeItem(chatStorageKey);
+      }
+    }
+  };
+
+  // Handle Enter key for fast message sending
+  const handleChatKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendQuestion();
     }
   };
 
@@ -515,7 +626,7 @@ export function VideoDetailPage({ isPublicShare = false }) {
                 Hệ thống đã xử lý thành công
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Toàn bộ dữ liệu học liệu (Video, Transcript, Summary, Quiz) đã sẵn sàng.
+                Toàn bộ dữ liệu học liệu (Video, Transcript, Summary, Quiz, Hỏi đáp AI) đã sẵn sàng.
               </p>
             </div>
           </div>
@@ -586,13 +697,13 @@ export function VideoDetailPage({ isPublicShare = false }) {
           </div>
         </div>
 
-        {/* Right Column: Multi-tab Study Hub (Transcript, Summary, Quiz) */}
+        {/* Right Column: Multi-tab Study Hub (Transcript, Summary, Quiz, QnA) */}
         <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[650px] overflow-hidden">
           {/* Tabs Navigation */}
-          <div className="flex items-center border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1">
+          <div className="flex items-center border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('transcript')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'transcript'
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -607,7 +718,7 @@ export function VideoDetailPage({ isPublicShare = false }) {
 
             <button
               onClick={() => setActiveTab('summary')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'summary'
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -619,7 +730,7 @@ export function VideoDetailPage({ isPublicShare = false }) {
 
             <button
               onClick={() => setActiveTab('quiz')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 ${
                 activeTab === 'quiz'
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -630,6 +741,23 @@ export function VideoDetailPage({ isPublicShare = false }) {
               {quizQuestions.length > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                   {quizQuestions.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('qna')}
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+                activeTab === 'qna'
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Hỏi đáp AI</span>
+              {chatMessages.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">
+                  {chatMessages.length}
                 </span>
               )}
             </button>
@@ -920,6 +1048,210 @@ export function VideoDetailPage({ isPublicShare = false }) {
                     )}
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 4: Interactive Q&A with AI */}
+          {activeTab === 'qna' && (
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/40">
+              {/* Check if user is in public share view */}
+              {isPublic ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3 shadow-inner">
+                    <MessageSquare className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-1">
+                    Hỏi đáp AI với bài giảng
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-xs mb-5 leading-relaxed">
+                    Tính năng trợ lý thông minh đặt câu hỏi cho AI chỉ khả dụng khi bạn đăng nhập tài khoản CloudTutor.
+                  </p>
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 transition-colors"
+                  >
+                    <span>Đăng nhập ngay</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  {/* Top Bar inside Q&A tab */}
+                  <div className="px-4 py-2.5 bg-white border-b border-slate-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="font-semibold text-slate-800">
+                        Trợ lý học tập AI
+                      </span>
+                    </div>
+
+                    {chatMessages.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearChat}
+                        className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-rose-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                        title="Xóa toàn bộ lịch sử hỏi đáp"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Xóa lịch sử</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Messages Area */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+                    {/* Welcome & Suggestions if empty */}
+                    {chatMessages.length === 0 ? (
+                      <div className="h-full flex flex-col justify-center items-center text-center p-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center mb-3 shadow-md shadow-indigo-100">
+                          <Bot className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 mb-1">
+                          Bạn có thắc mắc gì về bài giảng này?
+                        </h4>
+                        <p className="text-xs text-slate-500 max-w-xs mb-5 leading-relaxed">
+                          Hệ thống AI sẽ phân tích toàn bộ video, transcript và cung cấp câu trả lời giải thích chi tiết cho bạn.
+                        </p>
+
+                        {/* Quick Prompts */}
+                        <div className="w-full space-y-2 max-w-sm text-left">
+                          <span className="text-[11px] font-semibold text-slate-400 block px-1">
+                            Gợi ý câu hỏi nhanh:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleSendQuestion('Video này nói về nội dung gì?')}
+                            className="w-full text-left p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs text-slate-700 transition-all flex items-center gap-2 shadow-xs group"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:scale-110 transition-transform" />
+                            <span>Video này nói về nội dung gì?</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSendQuestion('Tóm tắt 3 ý quan trọng nhất trong bài giảng')}
+                            className="w-full text-left p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs text-slate-700 transition-all flex items-center gap-2 shadow-xs group"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:scale-110 transition-transform" />
+                            <span>Tóm tắt 3 ý quan trọng nhất trong bài giảng</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSendQuestion('Giải thích các khái niệm cốt lõi trong video')}
+                            className="w-full text-left p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs text-slate-700 transition-all flex items-center gap-2 shadow-xs group"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:scale-110 transition-transform" />
+                            <span>Giải thích các khái niệm cốt lõi trong video</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {chatMessages.map((msg) => {
+                          const isUser = msg.sender === 'user';
+                          const timeStr = msg.timestamp
+                            ? new Date(msg.timestamp).toLocaleTimeString('vi-VN', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            : '';
+
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-in fade-in duration-200`}
+                            >
+                              <div
+                                className={`max-w-[92%] rounded-2xl p-3.5 text-xs shadow-xs leading-relaxed transition-all ${
+                                  isUser
+                                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-tr-xs shadow-sm shadow-indigo-100'
+                                    : msg.isError
+                                    ? 'bg-rose-50 text-rose-900 border border-rose-200 rounded-tl-xs'
+                                    : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-xs shadow-xs'
+                                }`}
+                              >
+                                {!isUser && (
+                                  <div className="flex items-center justify-between gap-1.5 mb-2.5 pb-2 border-b border-slate-100">
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-700">
+                                      <span className="w-5 h-5 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                                        <Sparkles className="w-3 h-3" />
+                                      </span>
+                                      <span>{msg.provider || 'Gemini'} AI</span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 font-mono">{timeStr}</span>
+                                  </div>
+                                )}
+
+                                {isUser || msg.isError ? (
+                                  <div className="whitespace-pre-line leading-relaxed">{msg.text}</div>
+                                ) : (
+                                  <FormattedAiMessage text={msg.text} onSeek={handleSeek} />
+                                )}
+                              </div>
+
+                              {isUser && (
+                                <span className="text-[10px] text-slate-400 mt-1 px-1 font-mono">
+                                  {timeStr}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Thinking / Asking Bubble */}
+                        {isAsking && (
+                          <div className="flex flex-col items-start animate-in fade-in duration-150">
+                            <div className="max-w-[85%] bg-white border border-slate-200 rounded-2xl rounded-tl-xs p-3 text-xs text-slate-600 shadow-xs flex items-center gap-2.5">
+                              <Loader2 className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
+                              <span className="text-slate-600">
+                                Trợ lý đang suy nghĩ và phân tích bài giảng...
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div ref={chatMessagesEndRef} />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Bottom Input Box */}
+                  <div className="p-3 bg-white border-t border-slate-200">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSendQuestion();
+                      }}
+                      className="flex items-end gap-2"
+                    >
+                      <div className="flex-1 relative">
+                        <textarea
+                          rows={2}
+                          value={inputQuestion}
+                          onChange={(e) => setInputQuestion(e.target.value)}
+                          onKeyDown={handleChatKeyDown}
+                          placeholder="Hỏi AI về nội dung bài giảng (Enter để gửi, Shift+Enter xuống dòng)..."
+                          disabled={isAsking}
+                          className="w-full resize-none p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 disabled:opacity-60"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={!inputQuestion.trim() || isAsking}
+                        className="h-[52px] px-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white rounded-xl shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                        title="Gửi câu hỏi (Enter)"
+                      >
+                        {isAsking ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                </>
               )}
             </div>
           )}
