@@ -1,118 +1,162 @@
 import json
 import logging
 import os
-from typing import Dict, Any
 import boto3
 from botocore.exceptions import ClientError
-from geminiService import get_gemini_client
+from datetime import datetime, timezone
+
+from chunkTranscript import chunk_transcript
+from generateStudyContent import generate_study_content
+from validateAiOutput import validate_and_update_job_status  # Import hàm validate mới
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def load_prompt() -> str:
-    prompt_path = os.path.join(os.path.dirname(__file__), "prompts", "prompt.txt")
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        return f.read()
+s3_client = boto3.client("s3")
+sqs_client = boto3.client("sqs")
+dynamodb = boto3.resource("dynamodb")
 
-def _clean_json_response(response_text: str) -> Dict[str, Any]:
-    cleaned_text = response_text.strip()
-    if cleaned_text.startswith("```json"):
-        cleaned_text = cleaned_text[7:]
-    if cleaned_text.endswith("```"):
-        cleaned_text = cleaned_text[:-3]
-    cleaned_text = cleaned_text.strip()
-    return json.loads(cleaned_text)
+JOBS_TABLE_NAME = os.environ.get("JOBS_TABLE_NAME")
+RESULTS_TABLE_NAME = os.environ.get("RESULTS_TABLE_NAME")
 
-def _call_bedrock(full_prompt: str, region_name: str, model_id: str) -> Dict[str, Any]:
-    logger.info("Using Amazon Bedrock (model: %s) to generate Summary and Quiz...", model_id)
-    client = boto3.client("bedrock-runtime", region_name=region_name)
-    response = client.converse(
-        modelId=model_id,
-        messages=[
-            {
-                "role": "user",
-                "content": [{"text": full_prompt}]
-            }
-        ],
-        inferenceConfig={
-            "maxTokens": 4096,
-            "temperature": 0.3
+jobs_table = dynamodb.Table(JOBS_TABLE_NAME)
+results_table = dynamodb.Table(RESULTS_TABLE_NAME)
+
+def update_job_status(job_id: str, status: str, additional_attributes: dict = None):
+    try:
+        update_expression = "SET #st = :st, updated_at = :uat"
+        expression_attribute_names = {"#st": "status"}
+        expression_attribute_values = {
+            ":st": status,
+            ":uat": datetime.now(timezone.utc).isoformat()
         }
-    )
-    
-    output_message = response.get("output", {}).get("message", {})
-    content_blocks = output_message.get("content", [])
-    text_parts = [block["text"] for block in content_blocks if "text" in block]
-
-    if not text_parts:
-        raise ValueError("Bedrock Converse API return blank result.")
-
-    response_text = "\n".join(text_parts)
-    return _clean_json_response(response_text)
-
-def _call_gemini(full_prompt: str, model_name: str) -> Dict[str, Any]:
-    logger.info("Using Google AI (Gemini, model: %s) as fallback...", model_name)
-    api_key = os.environ.get("GEMINI_API_KEY")
-    client = get_gemini_client(api_key)
-    
-    response = client.models.generate_content(
-        model=model_name,
-        contents=full_prompt,
-    )
-    return _clean_json_response(response.text)
-
-def generate_study_content(
-    chunk_data: Dict[str, Any], 
-    bedrock_model_id: str = None,
-    bedrock_region: str = "ap-southeast-1",
-    gemini_model_name: str = None
-) -> Dict[str, Any]:
-
-    if not gemini_model_name:
-        gemini_model_name = os.environ.get("GEMINI_MODEL_ID")
-    
-    if not bedrock_model_id:
-        bedrock_model_id = os.environ.get("BEDROCK_MODEL_ID")
-
-    job_id = chunk_data.get("job_id", "")
-    owner_id = chunk_data.get("owner_id", "")
-    transcription_job_name = chunk_data.get("transcription_job_name", "")
-    
-    try:
-        template = load_prompt()
-    except Exception as e:
-        logger.error(f"Can't load prompt.txt: {e}")
-        raise e
         
-    prompt = (
-        template
-        .replace("{job_id}", job_id)
-        .replace("{owner_id}", owner_id)
-        .replace("{transcription_job_name}", transcription_job_name)
-    )
-    
-    # 2. Ghép dữ liệu chunks
-    chunks_text = "\n\n".join([
-        f"[{c.get('chunk_id', '')}] ({c.get('start_time', 0.0)}s - {c.get('end_time', 0.0)}s): {c.get('text', '')}" 
-        for c in chunk_data.get("chunks", [])
-    ])
-    full_prompt = f"{prompt}\n\nTranscript Chunks:\n{chunks_text}"
-    
-    result_json = None
-    
-    # 3. Ưu tiên gọi Gemini trước
+        if additional_attributes:
+            for k, v in additional_attributes.items():
+                update_expression += f", #{k} = :{k}"
+                expression_attribute_names[f"#{k}"] = k
+                expression_attribute_values[f":{k}"] = v
+
+        jobs_table.update_item(
+            Key={"job_id": job_id},
+            UpdateExpression=update_expression,
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=expression_attribute_values
+        )
+        logger.info("Đã cập nhật trạng thái job %s thành %s trên DynamoDB", job_id, status)
+    except Exception as e:
+        logger.exception("Không thể cập nhật trạng thái job lên DynamoDB: %s", str(e))
+        raise
+
+def save_results_to_dynamodb(job_id: str, transcript_key: str, chunks_key: str, summary_key: str, quiz_key: str, content_source: str):
     try:
-        result_json = _call_gemini(full_prompt, model_name=gemini_model_name)
-        logger.info("Generate Summary and Quiz by Gemini succeed.")
-        return result_json
-    except (json.JSONDecodeError, Exception) as e:  
-        logger.warning(f"Generate Summary and Quiz by Gemini failed ({e}). Changed to fallback Amazon Bedrock...")
-        # 4. Fallback sang Bedrock nếu Gemini gặp lỗi
+        results_table.put_item(
+            Item={
+                "job_id": job_id,
+                "transcript_key": transcript_key,
+                "chunks_key": chunks_key,
+                "summary_key": summary_key,
+                "quiz_key": quiz_key,
+                "content_source": content_source
+            }
+        )
+        logger.info("Đã lưu tham chiếu kết quả vào bảng ddb-cloudtutor-results cho job_id: %s", job_id)
+    except Exception as e:
+        logger.exception("Không thể lưu kết quả vào DynamoDB results table: %s", str(e))
+        raise
+
+def lambda_handler(event, context):
+    logger.info("Bắt đầu xử lý sự kiện SQS AI: %s", json.dumps(event))
+    batch_item_failures = []
+
+    for record in event.get("Records", []):
+        message_body = record.get("body", "{}")
+        job_id = None
         try:
-            result_json = _call_bedrock(full_prompt, region_name=bedrock_region, model_id=bedrock_model_id)
-            logger.info("Generate Summary and Quiz by Amazon Bedrock Fallback succeed.")
-            return result_json
+            body_data = json.loads(message_body)
+            job_id = body_data.get("job_id")
+            owner_id = body_data.get("owner_id")
+            bucket = body_data.get("bucket")
+            transcript_key = body_data.get("transcript_key")
+            source = body_data.get("source", "ASR")
+            processing_version = body_data.get("processing_version", "1")
+            handoff_id = body_data.get("handoff_id")
+
+            if not job_id or not bucket or not transcript_key:
+                raise ValueError(f"Thiếu thông tin bắt buộc trong message: {message_body}")
+
+            # [BỔ SUNG] Kiểm tra trạng thái Job trên DynamoDB trước khi xử lý (Chống job đã xóa / xử lý trùng)
+            job_response = jobs_table.get_item(Key={"job_id": job_id})
+            job_item = job_response.get("Item")
+            if not job_item or job_item.get("status") in ["DELETING", "DELETED"]:
+                logger.warning("Job %s không tồn tại hoặc đã bị xóa. Bỏ qua message AI.", job_id)
+                continue
+
+            # 1. Cập nhật trạng thái sang PROCESSING_AI trên DynamoDB
+            update_job_status(job_id, "PROCESSING_AI", {"processing_version": processing_version})
+
+            logger.info("Đang đọc transcript từ S3 - Bucket: %s, Key: %s", bucket, transcript_key)
+
+            # 2. Lấy dữ liệu transcript từ S3
+            s3_response = s3_client.get_object(Bucket=bucket, Key=transcript_key)
+            transcript_content = s3_response["Body"].read().decode("utf-8")
+            transcript_data = json.loads(transcript_content)
+
+            # 3. Tạo chunk.json
+            logger.info("Tiến hành chia chunk cho job_id: %s", job_id)
+            chunk_result = chunk_transcript(transcript_data)
             
-        except Exception as bedrock_err:
-            logger.error(f"Both Gemini and Bedrock failed. Bedrock failed: {bedrock_err}")
-            raise bedrock_err
+            chunks_key = f"results/{owner_id}/{job_id}/chunks.json"
+            s3_client.put_object(
+                Bucket=bucket,
+                Key=chunks_key,
+                Body=json.dumps(chunk_result, ensure_ascii=False, indent=2),
+                ContentType="application/json"
+            )
+
+            # 4. Gọi AI sinh Summary và Quiz
+            logger.info("Đang gọi AI sinh Summary và Quiz cho job_id: %s", job_id)
+            study_content = generate_study_content(chunk_result)
+
+            summary_data = study_content.get("summary", study_content) if study_content else {}
+            quiz_data = study_content.get("quiz", study_content) if study_content else {}
+
+            # 5. Lưu summary.json và quiz.json lên S3
+            summary_key = f"results/{owner_id}/{job_id}/summary.json"
+            quiz_key = f"results/{owner_id}/{job_id}/quiz.json"
+
+            s3_client.put_object(
+                Bucket=bucket, Key=summary_key,
+                Body=json.dumps(summary_data, ensure_ascii=False, indent=2),
+                ContentType="application/json"
+            )
+            s3_client.put_object(
+                Bucket=bucket, Key=quiz_key,
+                Body=json.dumps(quiz_data, ensure_ascii=False, indent=2),
+                ContentType="application/json"
+            )
+
+            # 6. Lưu tham chiếu kết quả vào ddb-cloudtutor-results
+            save_results_to_dynamodb(job_id, transcript_key, chunks_key, summary_key, quiz_key, source)
+
+            # 7. Gọi module validate riêng biệt để kiểm tra kết quả và cập nhật trạng thái DynamoDB
+            validate_and_update_job_status(
+                job_id=job_id,
+                chunk_result=chunk_result,
+                summary_data=summary_data,
+                quiz_data=quiz_data,
+                jobs_table=jobs_table,
+                update_job_status_func=update_job_status
+            )
+
+        except Exception as e:
+            logger.exception("Lỗi xử lý record SQS: %s", str(e))
+            if job_id:
+                try:
+                    update_job_status(job_id, "FAILED", {"error_code": str(type(e).__name__)})
+                except Exception as db_err:
+                    logger.error("Không thể cập nhật trạng thái FAILED vào DynamoDB: %s", str(db_err))
+
+            batch_item_failures.append({"itemIdentifier": record["messageId"]})
+
+    return {"batchItemFailures": batch_item_failures}
