@@ -17,6 +17,8 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
 const SHARE_DAYS = 7;
 const sha256 = (s) => crypto.createHash("sha256").update(s).digest("hex");
+const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
+const lambdaClient = new LambdaClient({});
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -296,6 +298,63 @@ async function getPublicShare(token) {
   });
 }
 
+async function askQuestion(e, jobId, owner) {
+  const job = await getOwnedJob(jobId, owner);
+  if (!job) return res(404, { error: "NOT_FOUND" });
+  if (!["COMPLETED", "COMPLETED_WITH_WARNING"].includes(job.status))
+    return res(409, { error: "JOB_NOT_READY" });
+
+  let question;
+  try {
+    question = String(JSON.parse(e.body || "{}").question || "").trim();
+  } catch {
+    return res(400, { error: "INVALID_JSON" });
+  }
+  if (!question || question.length > 500)
+    return res(400, { error: "INVALID_QUESTION" });
+
+  const fn = process.env.ANSWER_FUNCTION;
+  if (!fn) return res(503, { error: "QA_NOT_AVAILABLE" });
+
+  try {
+    const out = await lambdaClient.send(
+      new InvokeCommand({
+        FunctionName: fn,
+        Payload: Buffer.from(
+          JSON.stringify({
+            pathParameters: { id: jobId },
+            body: JSON.stringify({ question, owner_id: owner }),
+          }),
+        ),
+      }),
+    );
+    if (out.FunctionError) {
+      console.error("QA function error", Buffer.from(out.Payload).toString());
+      return res(502, { error: "QA_FAILED" });
+    }
+    const raw = JSON.parse(Buffer.from(out.Payload).toString());
+    let code = 200,
+      result = raw;
+    if (raw && raw.statusCode) {
+      code = raw.statusCode;
+      result = typeof raw.body === "string" ? JSON.parse(raw.body) : raw.body;
+    }
+    if (code === 404) return res(404, { error: "NOT_FOUND" });
+    if (code === 400) return res(400, { error: "INVALID_REQUEST" });
+    if (code >= 400 || result?.error_code) {
+      console.error("QA failed", code, result?.error_code); // không đẩy chi tiết lỗi ra web
+      return res(502, { error: "QA_FAILED" });
+    }
+    return res(200, {
+      answer: result.answer ?? null,
+      sources: result.sources || [],
+    });
+  } catch (err) {
+    console.error(err);
+    return res(502, { error: "QA_UNAVAILABLE" });
+  }
+}
+
 exports.handler = async (e) => {
   try {
     if (e.routeKey === "GET /public/share/{token}")
@@ -317,6 +376,8 @@ exports.handler = async (e) => {
         return await createShare(id, owner);
       case "DELETE /jobs/{id}/share":
         return await revokeShare(id, owner);
+      case "POST /jobs/{id}/questions":
+        return await askQuestion(e, id, owner);
       default:
         return res(404, { error: "ROUTE_NOT_FOUND" });
     }
