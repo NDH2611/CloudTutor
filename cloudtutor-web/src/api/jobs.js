@@ -1,0 +1,470 @@
+import axios from 'axios';
+import { INITIAL_MOCK_JOBS, MOCK_JOB_DETAILS } from './mockData.js';
+
+// Setup Axios 401 response interceptor for token expiration
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      window.dispatchEvent(new CustomEvent('cloudtutor:session_expired'));
+    }
+    return Promise.reject(error);
+  }
+);
+
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '';
+export const USE_MOCK = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !API_BASE_URL;
+
+// Local storage key for persisting jobs during frontend testing
+const LOCAL_STORAGE_JOBS_KEY = 'cloudtutor_jobs_v1';
+const LOCAL_STORAGE_DETAILS_KEY = 'cloudtutor_job_details_v1';
+
+function getStoredJobs() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_JOBS_KEY);
+  if (!saved) {
+    localStorage.setItem(LOCAL_STORAGE_JOBS_KEY, JSON.stringify(INITIAL_MOCK_JOBS));
+    return INITIAL_MOCK_JOBS;
+  }
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return INITIAL_MOCK_JOBS;
+  }
+}
+
+function saveStoredJobs(jobs) {
+  localStorage.setItem(LOCAL_STORAGE_JOBS_KEY, JSON.stringify(jobs));
+}
+
+function getStoredDetails() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_DETAILS_KEY);
+  if (!saved) {
+    localStorage.setItem(LOCAL_STORAGE_DETAILS_KEY, JSON.stringify(MOCK_JOB_DETAILS));
+    return MOCK_JOB_DETAILS;
+  }
+  try {
+    return { ...MOCK_JOB_DETAILS, ...JSON.parse(saved) };
+  } catch {
+    return MOCK_JOB_DETAILS;
+  }
+}
+
+function saveStoredDetails(details) {
+  localStorage.setItem(LOCAL_STORAGE_DETAILS_KEY, JSON.stringify(details));
+}
+
+/**
+ * Create a new Lecture Job
+ * Contract (router.js): POST /jobs { filename } 
+ * -> { job_id, status: "CREATED", upload_url, upload_headers: { "Content-Type": "video/mp4" }, expires_in: 900 }
+ */
+export async function createJob({ fileName, fileSize = 0, token = '' }) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 500)); // Simulate API Gateway latency
+    const jobId = 'job-' + Math.random().toString(36).substring(2, 10);
+    const mockUploadUrl = `https://s3-cloudtutor-media-mock.s3.ap-southeast-1.amazonaws.com/videos/mock_user/${jobId}/source.mp4?mock=true`;
+
+    const newJob = {
+      job_id: jobId,
+      original_filename: fileName || 'lecture.mp4',
+      file_name: fileName || 'lecture.mp4',
+      file_size: fileSize,
+      status: 'CREATED',
+      created_at: new Date().toISOString(),
+      upload_url: mockUploadUrl,
+      presigned_url: mockUploadUrl,
+      warnings: [],
+      error_code: null
+    };
+
+    const currentJobs = getStoredJobs();
+    saveStoredJobs([newJob, ...currentJobs]);
+
+    // Initialize mock detail for this job in processing state
+    const currentDetails = getStoredDetails();
+    currentDetails[jobId] = {
+      job_id: jobId,
+      original_filename: fileName,
+      status: 'CREATED',
+      created_at: newJob.created_at,
+      warnings: [],
+      error_code: null,
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      createdAtTimestamp: Date.now()
+    };
+    saveStoredDetails(currentDetails);
+
+    return {
+      job_id: jobId,
+      status: 'CREATED',
+      upload_url: mockUploadUrl,
+      presigned_url: mockUploadUrl,
+      upload_headers: { 'Content-Type': 'video/mp4' },
+      expires_in: 900,
+      isMock: true
+    };
+  }
+
+  // Live API Gateway call matching cloudtutor-api/src/router.js contract
+  const response = await axios.post(
+    `${API_BASE_URL}/jobs`,
+    {
+      filename: fileName || 'source.mp4'
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  return {
+    job_id: response.data.job_id,
+    status: response.data.status,
+    upload_url: response.data.upload_url,
+    presigned_url: response.data.upload_url,
+    upload_headers: response.data.upload_headers || { 'Content-Type': 'video/mp4' },
+    expires_in: response.data.expires_in,
+    isMock: false
+  };
+}
+
+/**
+ * Upload Video to S3 directly via Presigned URL
+ * Direct S3 PUT with Content-Type matching presigned signature (video/mp4)
+ */
+export async function uploadToS3(uploadUrl, file, onProgress, abortSignal) {
+  if (USE_MOCK || uploadUrl.includes('mock_user') || uploadUrl.includes('mock=true')) {
+    // Realistic upload simulation with chunking and progress callback
+    return new Promise((resolve, reject) => {
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        if (abortSignal && abortSignal.aborted) {
+          clearInterval(interval);
+          reject(new Error('Upload bị hủy bởi người dùng'));
+          return;
+        }
+
+        currentProgress += Math.floor(Math.random() * 12) + 10;
+        if (currentProgress >= 100) {
+          currentProgress = 100;
+          clearInterval(interval);
+          onProgress(100);
+
+          // Update status in local storage to QUEUED (ready for pipeline)
+          const jobs = getStoredJobs();
+          const updated = jobs.map((j) => {
+            if (uploadUrl.includes(j.job_id)) {
+              return { ...j, status: 'QUEUED' };
+            }
+            return j;
+          });
+          saveStoredJobs(updated);
+
+          const details = getStoredDetails();
+          for (const key in details) {
+            if (uploadUrl.includes(key)) {
+              details[key].status = 'QUEUED';
+              details[key].uploadedAt = Date.now();
+            }
+          }
+          saveStoredDetails(details);
+
+          setTimeout(() => {
+            resolve({
+              status: 200,
+              message: 'Mock S3 Direct PUT 200 OK (ETag: "9b2cf535f27731c974343645a3985328")'
+            });
+          }, 300);
+        } else {
+          onProgress(currentProgress);
+        }
+      }, 200);
+    });
+  }
+
+  // Live direct S3 PUT binary upload
+  return axios.put(uploadUrl, file, {
+    headers: {
+      'Content-Type': 'video/mp4'
+    },
+    signal: abortSignal,
+    onUploadProgress: (progressEvent) => {
+      if (progressEvent.total) {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(percent);
+      }
+    }
+  });
+}
+
+/**
+ * Fetch list of all jobs for current user
+ * Contract (router.js): GET /jobs?limit=20&next_token=...
+ * -> { items: [{ job_id, status, original_filename, created_at }], next_token }
+ */
+export async function fetchJobs(token = '', limit = 20, nextToken = null) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 250));
+    return {
+      items: getStoredJobs(),
+      next_token: null
+    };
+  }
+
+  const params = {};
+  if (limit) params.limit = limit;
+  if (nextToken) params.next_token = nextToken;
+
+  const res = await axios.get(`${API_BASE_URL}/jobs`, {
+    params,
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return {
+    items: res.data.items || res.data.jobs || (Array.isArray(res.data) ? res.data : []),
+    next_token: res.data.next_token || null
+  };
+}
+
+/**
+ * Fetch complete Job Detail (including Video URL, Transcript chunks, Summary, Quiz)
+ * Contract (router.js): GET /jobs/{id}
+ * -> { job_id, status, original_filename, created_at, warnings, error_code, content_source, transcript, chunks, summary, quiz, video_url }
+ */
+export async function getJobDetail(jobId, token = '') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 300));
+    const details = getStoredDetails();
+    let detail = details[jobId];
+
+    if (!detail) {
+      // Check stored jobs list
+      const jobs = getStoredJobs();
+      const basicJob = jobs.find((j) => j.job_id === jobId);
+      if (basicJob) {
+        detail = {
+          ...basicJob,
+          content_source: 'ASR',
+          warnings: [],
+          video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+        };
+      } else {
+        throw new Error('NOT_FOUND');
+      }
+    }
+
+    // In Mock mode: if job was recently created and uploaded, simulate pipeline progression
+    if (detail.uploadedAt && detail.status !== 'COMPLETED') {
+      const elapsed = Date.now() - detail.uploadedAt;
+      if (elapsed < 3000) {
+        detail.status = 'QUEUED';
+      } else if (elapsed < 7000) {
+        detail.status = 'TRANSCRIBING';
+      } else if (elapsed < 12000) {
+        detail.status = 'PROCESSING_AI';
+      } else {
+        detail.status = 'COMPLETED';
+        detail.content_source = 'ASR';
+        detail.transcript = MOCK_JOB_DETAILS['job-98a4b12c'].transcript;
+        detail.chunks = MOCK_JOB_DETAILS['job-98a4b12c'].chunks;
+        detail.summary = MOCK_JOB_DETAILS['job-98a4b12c'].summary;
+        detail.quiz = MOCK_JOB_DETAILS['job-98a4b12c'].quiz;
+
+        // Also update stored job list status
+        const jobs = getStoredJobs();
+        const updated = jobs.map((j) => (j.job_id === jobId ? { ...j, status: 'COMPLETED' } : j));
+        saveStoredJobs(updated);
+      }
+      details[jobId] = detail;
+      saveStoredDetails(details);
+    }
+
+    return detail;
+  }
+
+  const res = await axios.get(`${API_BASE_URL}/jobs/${jobId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return res.data;
+}
+
+/**
+ * Delete a job (marks DELETING, deletes S3 files, marks DELETED)
+ * Contract (router.js): DELETE /jobs/{id} -> { job_id, status: "DELETED" }
+ */
+export async function deleteJob(jobId, token = '') {
+  if (USE_MOCK) {
+    const jobs = getStoredJobs().filter((j) => j.job_id !== jobId);
+    saveStoredJobs(jobs);
+    const details = getStoredDetails();
+    delete details[jobId];
+    saveStoredDetails(details);
+    return { job_id: jobId, status: 'DELETED' };
+  }
+
+  const res = await axios.delete(`${API_BASE_URL}/jobs/${jobId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return res.data;
+}
+
+
+const LOCAL_STORAGE_SHARED_TOKENS_KEY = 'cloudtutor_shared_tokens_v1';
+
+function getStoredSharedTokens() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_SHARED_TOKENS_KEY);
+  if (!saved) return {};
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredSharedTokens(tokens) {
+  localStorage.setItem(LOCAL_STORAGE_SHARED_TOKENS_KEY, JSON.stringify(tokens));
+}
+
+/**
+ * Create or reuse public Share Link token for a job
+ * Contract: POST /jobs/{id}/share -> { share_token, expires_at }
+ */
+export async function createShareLink(jobId, token = '') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 400));
+    const tokens = getStoredSharedTokens();
+    
+    // Check if token already exists for this job and not expired
+    if (tokens[jobId] && new Date(tokens[jobId].expires_at) > new Date()) {
+      return tokens[jobId];
+    }
+
+    const shareToken = 'share_' + Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+    // 7 days expiration as specified
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    const shareInfo = {
+      job_id: jobId,
+      share_token: shareToken,
+      expires_at: expiresAt
+    };
+
+    tokens[jobId] = shareInfo;
+    tokens[shareToken] = shareInfo; // map both ways
+    saveStoredSharedTokens(tokens);
+
+    return {
+      share_token: shareToken,
+      expires_at: expiresAt
+    };
+  }
+
+  const res = await axios.post(
+    `${API_BASE_URL}/jobs/${jobId}/share`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return res.data;
+}
+
+/**
+ * Access a public shared lecture via share token (No Authorization header)
+ * Contract: GET /public/share/{token}
+ * -> { original_filename, warnings, content_source, transcript, chunks, summary, quiz, video_url }
+ */
+export async function getPublicShareDetail(shareToken) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 350));
+    const tokens = getStoredSharedTokens();
+    const shareInfo = tokens[shareToken];
+
+    let targetJobId = shareInfo?.job_id;
+    if (!targetJobId) {
+      targetJobId = 'job_7048e75d-0975-4e59-abd0-53d173441d38';
+    }
+
+    const details = getStoredDetails();
+    const detail = details[targetJobId] || MOCK_JOB_DETAILS['job_7048e75d-0975-4e59-abd0-53d173441d38'] || MOCK_JOB_DETAILS['job-98a4b12c'];
+
+    if (!detail) {
+      throw new Error('NOT_FOUND');
+    }
+
+    return {
+      original_filename: detail.original_filename || detail.file_name,
+      warnings: detail.warnings || [],
+      content_source: detail.content_source || 'ASR',
+      transcript: detail.transcript || null,
+      chunks: detail.chunks || null,
+      summary: detail.summary || null,
+      quiz: detail.quiz || null,
+      video_url: detail.video_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+    };
+  }
+
+  const res = await axios.get(`${API_BASE_URL}/public/share/${shareToken}`);
+  return res.data;
+}
+
+
+/**
+ * Ask AI a question about the lecture
+ * Contract: POST /jobs/{id}/questions
+ * Body: { job_id, question }
+ * Returns: { job_id, question, answer, provider, status }
+ */
+export async function askJobQuestion(jobId, question, token = '') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 600));
+    const qLower = (question || '').toLowerCase();
+    let answer = '';
+
+    if (qLower.includes('nội dung gì') || qLower.includes('về cái gì') || qLower.includes('giới thiệu')) {
+      answer = 'Bài giảng này trình bày về kiến trúc Transformer trong Trí tuệ nhân tạo (AI), xuất phát từ nghiên cứu năm 2017 "Attention Is All You Need". Video giải thích cơ chế Self-Attention giúp mô hình hiểu mối quan hệ ngữ cảnh giữa các từ ngữ mà không cần xử lý tuần tự từng từ như RNN truyền thống.';
+    } else if (qLower.includes('tóm tắt') || qLower.includes('ý chính') || qLower.includes('luận điểm')) {
+      answer = 'Dưới đây là 3 luận điểm cốt lõi của bài giảng:\n1. Mạng nơ-ron hồi quy (RNN) cũ đọc từng từ một, khiến việc huấn luyện song song bị giới hạn và khó nắm bắt quan hệ khoảng cách xa.\n2. Cơ chế Self-Attention của Transformer sử dụng Query, Key, Value để tính toán trọng số liên hệ giữa mọi từ trong một bước duy nhất.\n3. Multi-Head Attention và Positional Encoding giúp mô hình quan sát nhiều khía cạnh cùng lúc và nhận biết được thứ tự từ trong câu.';
+    } else if (qLower.includes('khái niệm') || qLower.includes('thuật ngữ') || qLower.includes('transformer')) {
+      answer = 'Các khái niệm kỹ thuật chính trong bài giảng gồm:\n• Query, Key, Value: Ba thành phần toán học để chấm điểm sự tương quan giữa các từ.\n• Softmax: Hàm chuẩn hóa điểm số thành các trọng số xác suất.\n• Multi-Head Attention: 8 đầu chú ý chạy song song để nhìn ngữ cảnh theo các góc độ khác nhau.\n• Positional Encoding: Vector sóng hình sin/cosin bù đắp thông tin vị trí cho mô hình.';
+    } else {
+      answer = `Dựa trên nội dung bài giảng, đối với câu hỏi "${question}": Hệ thống AI đã phân tích từ transcript và nhận thấy bài giảng tập trung giải thích cách kiến trúc Transformer giải quyết bài toán biểu diễn ngữ cảnh và nâng cao hiệu suất huấn luyện so với các mô hình trước đây.`;
+    }
+
+    return {
+      job_id: jobId,
+      question: question,
+      answer: answer,
+      provider: 'Gemini',
+      status: 'SUCCESS'
+    };
+  }
+
+  const res = await axios.post(
+    `${API_BASE_URL}/jobs/${jobId}/questions`,
+    {
+      job_id: jobId,
+      question: question
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return res.data;
+}
